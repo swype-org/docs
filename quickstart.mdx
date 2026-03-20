@@ -113,10 +113,10 @@ document.getElementById('deposit-btn').addEventListener('click', async () => {
 ### React
 
 ```tsx
-import { useSwypeCheckout } from '@swype-org/checkout/react';
+import { useBlinkCheckout } from '@swype-org/checkout/react';
 
 function DepositButton() {
-  const { status, result, error, displayMessage, requestDeposit } = useSwypeCheckout({
+  const { status, result, error, displayMessage, requestDeposit } = useBlinkCheckout({
     signer: '/api/sign-payment',
   });
 

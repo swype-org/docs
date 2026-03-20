@@ -17,7 +17,7 @@ integration/                     # Step-by-step integration guide
   production-checklist.mdx       # Go-live checklist
 sdk-reference/                   # Checkout SDK API reference
   checkout-class.mdx             # Checkout class API
-  react-hook.mdx                 # useSwypeCheckout hook API
+  react-hook.mdx                 # useBlinkCheckout hook API
   types.mdx                      # TypeScript types reference
   errors.mdx                     # Error codes and getDisplayMessage
   events.mdx                     # Events, status transitions, lifecycle

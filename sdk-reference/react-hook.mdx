@@ -1,12 +1,12 @@
 ---
 title: React Hook
-description: API reference for the useSwypeCheckout React hook.
+description: API reference for the useBlinkCheckout React hook.
 ---
 
-The `useSwypeCheckout` hook wraps the `Checkout` class with reactive React state. It manages the instance lifecycle and cleans up on unmount.
+The `useBlinkCheckout` hook wraps the `Checkout` class with reactive React state. It manages the instance lifecycle and cleans up on unmount.
 
 ```typescript
-import { useSwypeCheckout } from '@swype-org/checkout/react';
+import { useBlinkCheckout } from '@swype-org/checkout/react';
 ```
 
 <Info>
@@ -26,7 +26,7 @@ function DepositButton() {
     requestDeposit,
     focus,
     close,
-  } = useSwypeCheckout({
+  } = useBlinkCheckout({
     signer: '/api/sign-payment',
   });
 
@@ -57,7 +57,7 @@ function DepositButton() {
 The hook accepts a single `CheckoutConfig` object. See [Checkout Class](/sdk-reference/checkout-class) for the full config reference.
 
 ```typescript
-useSwypeCheckout(config: CheckoutConfig): UseSwypeCheckoutReturn
+useBlinkCheckout(config: CheckoutConfig): UseBlinkCheckoutReturn
 ```
 
 The `Checkout` instance is created once on first render and destroyed on unmount. The `config` is read during initialization only — changing config props after mount does not reconfigure the instance.

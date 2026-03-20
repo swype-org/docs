@@ -56,10 +56,10 @@ try {
 
 ### React
 
-The `useSwypeCheckout` hook provides `displayMessage` as a convenience:
+The `useBlinkCheckout` hook provides `displayMessage` as a convenience:
 
 ```tsx
-const { error, displayMessage } = useSwypeCheckout({ signer: '/api/sign-payment' });
+const { error, displayMessage } = useBlinkCheckout({ signer: '/api/sign-payment' });
 
 // displayMessage is null when there is no error,
 // otherwise it's the result of getDisplayMessage(error)

@@ -115,7 +115,7 @@ Call this when the component unmounts or the page unloads.
 // Vanilla JS — on page unload
 window.addEventListener('beforeunload', () => checkout.destroy());
 
-// React — handled automatically by useSwypeCheckout
+// React — handled automatically by useBlinkCheckout
 ```
 
 <Warning>
@@ -124,7 +124,7 @@ Always call `destroy()` when the checkout is no longer needed to prevent memory 
 
 ## React lifecycle
 
-The `useSwypeCheckout` hook manages the `Checkout` instance lifecycle automatically:
+The `useBlinkCheckout` hook manages the `Checkout` instance lifecycle automatically:
 
 - Creates the instance on first render.
 - Subscribes to `status-change`, `complete`, and `error` events.
