@@ -54,7 +54,45 @@ Your endpoint must perform these steps in order:
 
 Return HTTP 400 with an error message for any validation failure.
 
-### 2. Generate an idempotency key
+### 2. Verify destination ownership
+
+Before signing, confirm that the authenticated user actually controls the destination `address`. Without this check, a malicious caller could submit someone else's wallet address and direct funds to an account they don't own.
+
+Your signer should look up the user's wallets via your auth provider and verify the requested `address` is among them. Here is an example using [Privy](https://docs.privy.io) as the auth provider:
+
+```javascript
+const { PrivyClient } = require('@privy-io/server-auth');
+
+const privy = new PrivyClient(process.env.PRIVY_APP_ID, process.env.PRIVY_APP_SECRET);
+
+async function verifyDestinationOwnership(authToken, requestedAddress) {
+  const { userId } = await privy.verifyAuthToken(authToken);
+  const user = await privy.getUser(userId);
+
+  const userWallets = user.linkedAccounts
+    .filter((a) => a.type === 'wallet')
+    .map((a) => a.address.toLowerCase());
+
+  if (!userWallets.includes(requestedAddress.toLowerCase())) {
+    return false;
+  }
+  return true;
+}
+```
+
+In your route handler, call this before proceeding to signing:
+
+```javascript
+const authToken = req.headers.authorization?.replace('Bearer ', '');
+const ownsAddress = await verifyDestinationOwnership(authToken, req.body.address);
+if (!ownsAddress) {
+  return res.status(403).json({ error: 'Destination address does not belong to the authenticated user.' });
+}
+```
+
+If you use a different auth provider, the principle is the same: resolve the caller's identity, fetch their linked wallets, and reject the request if the destination address is not among them.
+
+### 3. Generate an idempotency key
 
 Generate a UUID v4 for this payment request. This prevents duplicate transfers if the user retries.
 
@@ -63,7 +101,7 @@ const { randomUUID } = require('node:crypto');
 const idempotencyKey = randomUUID();
 ```
 
-### 3. Compute the expiration timestamp
+### 4. Compute the expiration timestamp
 
 Set an expiration for the payment link. A TTL of 600 seconds (10 minutes) is recommended.
 
@@ -72,7 +110,7 @@ const linkTtlSeconds = 600;
 const expiresAt = new Date(Date.now() + linkTtlSeconds * 1000).toISOString();
 ```
 
-### 4. Build the payload JSON
+### 5. Build the payload JSON
 
 ```javascript
 const payloadObject = {
@@ -87,7 +125,7 @@ const payloadObject = {
 };
 ```
 
-### 5. Base64url-encode the payload
+### 6. Base64url-encode the payload
 
 Convert the JSON string to a base64url-encoded string. Base64url uses `-` instead of `+`, `_` instead of `/`, and no padding.
 
@@ -110,7 +148,7 @@ const signature = signer.sign(privateKeyPem).toString('base64url');
 
 The input to the signing function is the base64url-encoded payload string (ASCII bytes). The output is the raw DER-encoded ECDSA signature, which is then base64url-encoded.
 
-### 7. Return the response
+### 8. Return the response
 
 ## Response format
 
@@ -318,6 +356,7 @@ The signer endpoint is a security-critical component. A compromised signer allow
 
 - **HTTPS only** — never serve the signer over plain HTTP in production.
 - **Authenticate callers** — the signer should only accept requests from your own frontend. Use session cookies, auth tokens, or CORS restrictions.
+- **Verify destination ownership** — confirm the authenticated user controls the destination `address` before signing. Without this, a malicious user could redirect funds to a wallet they don't own. See [step 2](#2-verify-destination-ownership) above.
 - **Short TTL** — keep `linkTtlSeconds` short (600 seconds recommended) to limit the window for replayed links.
 - **Rate limit** — protect against abuse by rate-limiting signer requests per user/session.
 - **Log, but never log the private key** — log request metadata for debugging, but never log the private key or raw signature in production.
