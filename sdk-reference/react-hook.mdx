@@ -1,0 +1,91 @@
+---
+title: React Hook
+description: API reference for the useSwypeCheckout React hook.
+---
+
+The `useSwypeCheckout` hook wraps the `Checkout` class with reactive React state. It manages the instance lifecycle and cleans up on unmount.
+
+```typescript
+import { useSwypeCheckout } from '@swype-org/checkout/react';
+```
+
+<Info>
+The React entry point requires `react` >= 18 as a peer dependency.
+</Info>
+
+## Usage
+
+```tsx
+function DepositButton() {
+  const {
+    status,
+    result,
+    error,
+    displayMessage,
+    isActive,
+    requestDeposit,
+    focus,
+    close,
+  } = useSwypeCheckout({
+    signer: '/api/sign-payment',
+  });
+
+  return (
+    <>
+      <button
+        onClick={() =>
+          requestDeposit({
+            amount: 50,
+            chainId: 8453,
+            address: '0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a',
+            token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          })
+        }
+        disabled={isActive}
+      >
+        {status === 'signer-loading' ? 'Preparing...' : 'Deposit $50'}
+      </button>
+      {error && <p className="error">{displayMessage}</p>}
+      {result && <p>Transfer {result.transfer.id} complete!</p>}
+    </>
+  );
+}
+```
+
+## Parameters
+
+The hook accepts a single `CheckoutConfig` object. See [Checkout Class](/sdk-reference/checkout-class) for the full config reference.
+
+```typescript
+useSwypeCheckout(config: CheckoutConfig): UseSwypeCheckoutReturn
+```
+
+The `Checkout` instance is created once on first render and destroyed on unmount. The `config` is read during initialization only — changing config props after mount does not reconfigure the instance.
+
+## Return value
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `status` | `CheckoutStatus` | Current phase: `'idle'`, `'signer-loading'`, `'iframe-active'`, `'completed'`, or `'error'`. |
+| `result` | `DepositResult \| null` | Last successful deposit result. Reset to `null` when a new deposit starts. |
+| `error` | `CheckoutError \| null` | Last checkout error. Reset to `null` on successful completion. |
+| `displayMessage` | `string \| null` | User-friendly error message derived from `error` via `getDisplayMessage()`, or `null` when there is no error. |
+| `isActive` | `boolean` | `true` when `status` is `'signer-loading'` or `'iframe-active'`. |
+| `requestDeposit` | `(request: DepositRequest) => Promise<DepositResult>` | Start a deposit flow. Opens the modal iframe with the hosted checkout. |
+| `focus` | `() => void` | No-op. Retained for API compatibility. |
+| `close` | `() => void` | Close the checkout iframe and reset to idle. |
+
+## Exported types
+
+The React entry point re-exports commonly used types for convenience:
+
+```typescript
+import type {
+  CheckoutConfig,
+  CheckoutStatus,
+  DepositRequest,
+  DepositResult,
+} from '@swype-org/checkout/react';
+
+import { CheckoutError, getDisplayMessage } from '@swype-org/checkout/react';
+```

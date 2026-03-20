@@ -1,0 +1,40 @@
+---
+title: Production Checklist
+description: Verify every item before going live with Blink payments.
+---
+
+Before going live, verify each item:
+
+## Keys and registration
+
+- [ ] Generated an ECDSA P-256 key pair.
+- [ ] Private key stored in a secrets manager or HSM (not in code, not in env files on disk).
+- [ ] Public key registered with Blink; `merchantId` received and configured.
+- [ ] Key rotation plan documented.
+
+## Signer endpoint
+
+- [ ] Signer served over HTTPS only.
+- [ ] Signer authenticates callers (session token, API key, or CORS restriction).
+- [ ] Request validation implemented for all fields (`amount`, `chainId`, `address`, `token`, `callbackScheme`).
+- [ ] Token validation checks for valid contract address format (`0x`-prefixed hex).
+- [ ] Idempotency keys are generated as UUID v4 per request.
+- [ ] Payment link TTL is set to a reasonable value (recommended: 600 seconds).
+- [ ] Rate limiting is in place to prevent abuse.
+- [ ] Error responses do not leak internal details (stack traces, key paths, etc.).
+- [ ] CORS configured to only allow your frontend origin(s).
+
+## Checkout SDK
+
+- [ ] SDK installed and configured with production `signer` URL.
+- [ ] `webviewBaseUrl` set to the Blink production URL (confirm with Blink).
+- [ ] Error handling implemented with `CheckoutError` codes and user-friendly messages via `getDisplayMessage()`.
+- [ ] `checkout.destroy()` called on component unmount / page unload.
+- [ ] Viewport meta tag set correctly for mobile (no unexpected scaling).
+
+## Monitoring and reconciliation
+
+- [ ] Signer requests and responses logged (excluding private key material).
+- [ ] `reference` and/or `metadata` used for correlating payments with internal orders.
+- [ ] Transfer status verified server-side (do not rely solely on the client-side `DepositResult`).
+- [ ] Alerting configured for signer errors, timeouts, and elevated failure rates.

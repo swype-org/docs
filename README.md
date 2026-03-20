@@ -1,55 +1,44 @@
-# Mintlify Starter Kit
+# Blink Merchant Docs
 
-Use the starter kit to get your docs deployed and ready to customize.
+Merchant-facing documentation site powered by [Mintlify](https://mintlify.com). Deployed automatically on push to `main`.
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+## Structure
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+```
+introduction.mdx                 # Overview of Blink for merchants
+quickstart.mdx                   # 5-minute getting started guide
+integration/                     # Step-by-step integration guide
+  architecture.mdx               # Architecture overview + sequence diagram
+  key-generation.mdx             # Generate ECDSA P-256 key pair
+  merchant-registration.mdx      # Register with Blink
+  signer-endpoint.mdx            # Build the signer endpoint (Node.js + Python)
+  checkout-sdk.mdx               # Integrate the Checkout SDK
+  testing.mdx                    # Testing and staging setup
+  production-checklist.mdx       # Go-live checklist
+sdk-reference/                   # Checkout SDK API reference
+  checkout-class.mdx             # Checkout class API
+  react-hook.mdx                 # useSwypeCheckout hook API
+  types.mdx                      # TypeScript types reference
+  errors.mdx                     # Error codes and getDisplayMessage
+  events.mdx                     # Events, status transitions, lifecycle
+openapi.yaml                     # OpenAPI spec (copied from swype monorepo)
+```
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
-
-## AI-assisted writing
-
-Set up your AI coding tool to work with Mintlify:
+## Local development
 
 ```bash
-npx skills add https://mintlify.com/docs
+npm i -g mintlify
+mintlify dev
 ```
 
-This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
+## OpenAPI spec sync
 
-See the [AI tools guides](/ai-tools) for tool-specific setup.
+The `openapi.yaml` file is a copy of `core-api/swype-api.yaml` from the main [swype monorepo](https://github.com/swype-org/swype). When the API spec changes, copy the updated file here:
 
-## Development
-
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
-
-```
-npm i -g mint
+```bash
+cp /path/to/swype/core-api/swype-api.yaml openapi.yaml
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+## AI readability
 
-```
-mint dev
-```
-
-View your local preview at `http://localhost:3000`.
-
-## Publishing changes
-
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
-
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+Mintlify automatically generates `llms.txt` and `llms-full.txt` at the root of the docs domain for LLM consumption.

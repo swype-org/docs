@@ -1,0 +1,31 @@
+---
+title: Register Your Merchant Account
+description: Send your public key to Blink and receive your merchant ID.
+---
+
+After [generating your key pair](/integration/key-generation), send your **public key PEM** to Blink to register as a merchant.
+
+## What Blink registers
+
+| Field | Value |
+|-------|-------|
+| `merchantId` | Your unique UUID (assigned by Blink) |
+| `displayName` | Your merchant display name |
+| `algorithm` | `ECDSA_P256_SHA256` |
+| `status` | `ACTIVE` |
+| `publicKey` | Your PEM-encoded public key |
+
+Once registered, Blink's hosted flow verifies every signed payment link your signer produces by fetching your public key from the API (`GET /v1/merchants/{id}/public-key`).
+
+## What you receive
+
+After registration, Blink provides your `merchantId` — a UUID you will configure in your signer endpoint. This ID is included in every `SignerResponse` so Blink knows which public key to use for verification.
+
+## Key rotation
+
+Your public key can be updated by contacting Blink. When rotating keys:
+
+1. Generate a new key pair.
+2. Send the new public key to Blink.
+3. Once confirmed, update your signer endpoint to use the new private key.
+4. The old key is deactivated immediately — do not rotate during high-traffic periods.

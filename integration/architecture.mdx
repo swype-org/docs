@@ -1,0 +1,64 @@
+---
+title: Architecture Overview
+description: How Blink merchant payments work — the signed-link model, data flow, and component responsibilities.
+---
+
+Blink merchant payments use a **signed-link model**. Your server signs each payment request with your private key. Blink verifies it with the public key you registered, ensuring every payment was authorized by you.
+
+## Payment flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant MerchantApp as Merchant App
+    participant Signer as Merchant Signer (your server)
+    participant SDK as Checkout SDK
+    participant HostedFlow as Hosted Flow (Blink)
+    participant BlinkAPI as Blink API
+
+    User->>MerchantApp: Clicks "Deposit"
+    MerchantApp->>SDK: requestDeposit(amount, chainId, address, token)
+    SDK->>Signer: POST SignerRequest
+    Signer->>Signer: Validate, build payload, sign with private key
+    Signer->>SDK: SignerResponse (merchantId, payload, signature)
+    SDK->>HostedFlow: Open modal iframe with signed URL
+    HostedFlow->>BlinkAPI: GET /v1/merchants/{id}/public-key
+    HostedFlow->>HostedFlow: Verify signature with public key
+    HostedFlow->>User: Payment UI (login, wallet, deposit)
+    User->>HostedFlow: Completes payment
+    HostedFlow->>BlinkAPI: POST /v1/transfers
+    HostedFlow->>SDK: Transfer complete (postMessage)
+    SDK->>MerchantApp: DepositResult
+```
+
+## Components
+
+### Your side
+
+| Component | Runs on | Responsibility |
+|-----------|---------|----------------|
+| **Merchant App** | Browser | Your frontend. Calls `requestDeposit()` on the Checkout SDK when the user wants to pay. |
+| **Merchant Signer** | Your server | Validates payment requests, generates an idempotency key, builds a JSON payload, signs it with your ECDSA P-256 private key, and returns the signed response. |
+
+### Blink side
+
+| Component | Runs on | Responsibility |
+|-----------|---------|----------------|
+| **Checkout SDK** | Browser (in your app) | Orchestrates the signer call, opens the iframe, and listens for the completion `postMessage`. Published as `@swype-org/checkout`. |
+| **Hosted Flow** | Browser (iframe) | Blink's payment UI. Verifies the merchant signature, authenticates the user, handles wallet connection, and executes the on-chain transfer. |
+| **Blink API** | Server | Stores merchant public keys, creates transfers, manages wallets and accounts. |
+
+## Security model
+
+1. **Private key stays on your server.** The Checkout SDK never sees your private key. It only receives the signed payload from your signer endpoint.
+2. **Blink verifies every payment.** The hosted flow fetches your registered public key and verifies the ECDSA signature before showing any payment UI. A forged or tampered payload is rejected.
+3. **Idempotency keys prevent duplicates.** Each signer response includes a unique UUID. If the same idempotency key is submitted twice, the second transfer is rejected.
+4. **Short-lived links.** The signed payload includes an `expiresAt` timestamp (recommended: 10 minutes). Expired links are rejected by the hosted flow.
+
+## Iframe lifecycle
+
+On desktop viewports (wider than 480px), the checkout renders as a centered modal (460px wide, 680px tall) with a backdrop blur overlay. On mobile viewports (480px or narrower), it renders full-screen for an app-like experience.
+
+The iframe has WebAuthn permissions (`publickey-credentials-get` and `publickey-credentials-create`) so passkey ceremonies work cross-origin. The user never leaves your page.
+
+When the user completes payment, the hosted flow sends a `swype:transfer-complete` postMessage. The SDK validates the origin, acknowledges receipt, closes the iframe, and resolves the `requestDeposit()` promise.

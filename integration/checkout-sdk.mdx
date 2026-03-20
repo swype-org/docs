@@ -1,0 +1,252 @@
+---
+title: Integrate the Checkout SDK
+description: Install and configure the Checkout SDK to trigger payment flows from your frontend.
+---
+
+The Checkout SDK (`@swype-org/checkout`) opens Blink's hosted payment flow in a modal iframe overlay. On mobile viewports (480px or narrower), the iframe renders full-screen for an app-like experience. The SDK handles the signer call, iframe lifecycle, passkey/WebAuthn delegation, and completion detection via `postMessage`.
+
+## Install
+
+<CodeGroup>
+
+```bash npm
+npm install @swype-org/checkout
+```
+
+```bash yarn
+yarn add @swype-org/checkout
+```
+
+```bash pnpm
+pnpm add @swype-org/checkout
+```
+
+</CodeGroup>
+
+## Vanilla JavaScript
+
+```typescript
+import { Checkout, CheckoutError, getDisplayMessage } from '@swype-org/checkout';
+
+const checkout = new Checkout({
+  signer: '/api/sign-payment',
+});
+
+document.getElementById('deposit-btn')!.addEventListener('click', async () => {
+  try {
+    const { transfer } = await checkout.requestDeposit({
+      amount: 50,
+      chainId: 8453,
+      address: '0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a',
+      token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    });
+    console.log('Transfer complete:', transfer.id, transfer.status);
+  } catch (error) {
+    if (error instanceof CheckoutError) {
+      showErrorToUser(getDisplayMessage(error));
+    }
+  }
+});
+```
+
+## React hook
+
+```tsx
+import { useSwypeCheckout } from '@swype-org/checkout/react';
+
+function DepositButton() {
+  const { status, result, error, displayMessage, requestDeposit } = useSwypeCheckout({
+    signer: '/api/sign-payment',
+  });
+
+  const handleDeposit = () => {
+    requestDeposit({
+      amount: 50,
+      chainId: 8453,
+      address: userWalletAddress,
+      token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+    });
+  };
+
+  return (
+    <>
+      <button onClick={handleDeposit} disabled={status === 'signer-loading'}>
+        {status === 'signer-loading' ? 'Preparing...' : 'Deposit $50'}
+      </button>
+      {error && <p className="error">{displayMessage}</p>}
+      {result && <p>Transfer {result.transfer.id} complete!</p>}
+    </>
+  );
+}
+```
+
+The hook returns reactive `status`, `result`, `error`, `displayMessage`, and `isActive` values, plus `requestDeposit`, `focus`, and `close` actions. It manages the `Checkout` lifecycle and cleans up on unmount.
+
+## Configuration
+
+```typescript
+const checkout = new Checkout({
+  // Required: URL string or custom async function
+  signer: '/api/sign-payment',
+
+  // Base URL of the hosted payment webview app.
+  // Default: 'https://pay.tryblink.xyz'
+  webviewBaseUrl: 'https://pay.tryblink.xyz',
+
+  // Origin for postMessage validation. Derived from webviewBaseUrl when omitted.
+  hostedFlowOrigin: 'https://pay.tryblink.xyz',
+
+  // DOM element to mount the iframe overlay into. Default: document.body
+  containerElement: document.getElementById('checkout-root')!,
+
+  // Max ms to wait for signer response. Default: 15000
+  signerTimeoutMs: 15_000,
+
+  // Max ms for entire flow (signer + user completion). No limit by default.
+  flowTimeoutMs: 300_000,
+
+  // Enable debug logging. Default: false
+  debug: false,
+});
+```
+
+## Custom signer function
+
+If you need full control over the HTTP call to your signer (custom headers, auth tokens, different HTTP method), pass a function instead of a URL:
+
+```typescript
+import type { SignerFunction } from '@swype-org/checkout';
+
+const checkout = new Checkout({
+  signer: async (data) => {
+    const res = await fetch('/api/sign-payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getSessionToken()}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(`Signer error: ${res.status}`);
+    return res.json();
+  },
+});
+```
+
+## Deposit request fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `amount` | `number` | Yes | USD amount to deposit (> 0). |
+| `chainId` | `number` | Yes | EVM chain ID for the destination. Dynamic per user. |
+| `address` | `string` | Yes | Destination wallet address (0x-prefixed, 40 hex chars). Dynamic per user. |
+| `token` | `string` | Yes | Token contract address on the destination chain (0x-prefixed hex). |
+| `callbackScheme` | `string \| null` | No | Always `null` for browser integrations. Reserved for native app deep links. |
+| `reference` | `string` | No | Merchant order/invoice ID for reconciliation. |
+| `metadata` | `Record<string, string>` | No | Arbitrary key-value pairs forwarded to your signer. |
+
+<Info>
+The destination `chainId`, `address`, and `token` are **not** static merchant configuration. They are set dynamically per transaction, typically based on the user's embedded wallet.
+</Info>
+
+## Deposit result
+
+When the payment completes, the SDK returns a `DepositResult`:
+
+```typescript
+interface DepositResult {
+  transfer: TransferSummary;
+  idempotencyKey?: string;
+  preview?: {
+    amount: number;
+    chainId: number;
+    address: string;
+    token: string;
+  };
+}
+
+interface TransferSummary {
+  id: string;
+  status: string;
+  amount?: { amount: number; currency: string };
+  destinations?: Array<{
+    chainId: string;
+    address: string;
+    token?: { address?: string; symbol?: string };
+  }>;
+}
+```
+
+## Status flow
+
+| Status | Meaning |
+|--------|---------|
+| `idle` | No active flow. |
+| `signer-loading` | Calling the merchant signer endpoint. |
+| `iframe-active` | Hosted flow iframe is open, waiting for user to complete payment. |
+| `completed` | Transfer succeeded. |
+| `error` | Something failed. |
+
+```typescript
+checkout.on('status-change', (status) => console.log('Status:', status));
+
+checkout.status;    // current status
+checkout.result;    // last DepositResult (when completed)
+checkout.error;     // last CheckoutError (when error)
+checkout.isActive;  // true during signer-loading or iframe-active
+```
+
+## Error handling
+
+See [Error Codes](/sdk-reference/errors) for the full reference. Every error is a `CheckoutError` with a machine-readable `code`:
+
+```typescript
+import { CheckoutError, getDisplayMessage } from '@swype-org/checkout';
+
+try {
+  await checkout.requestDeposit({ /* ... */ });
+} catch (err) {
+  if (err instanceof CheckoutError) {
+    showToast(getDisplayMessage(err));
+    console.error(err.code, err.message);
+  }
+}
+```
+
+## Lifecycle
+
+```typescript
+// Close the checkout iframe without waiting for completion
+checkout.close();
+
+// Tear down and release all resources (call on unmount / page unload)
+checkout.destroy();
+```
+
+## Metadata and order reference
+
+Pass merchant-specific data through the flow for reconciliation:
+
+```typescript
+await checkout.requestDeposit({
+  amount: 50,
+  chainId: 8453,
+  address: '0x...',
+  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  reference: 'order-123',
+  metadata: { invoiceId: 'INV-456', customerId: 'cust-789' },
+});
+```
+
+The `reference` and `metadata` are forwarded to your signer endpoint so you can correlate the payment with your internal records.
+
+## Mobile browser considerations
+
+- **Full-screen iframe:** On viewports 480px or narrower, the checkout iframe automatically renders full-screen with no border radius.
+- **Passkey / WebAuthn:** The SDK transparently handles WebAuthn ceremonies between the cross-origin iframe and the parent page. No additional configuration is needed.
+- **`callbackScheme`:** Always pass `null` (or omit) for browser integrations. Reserved for native app deep-link flows.
+- **Viewport meta tag:** Ensure your page includes a proper viewport meta tag:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+```

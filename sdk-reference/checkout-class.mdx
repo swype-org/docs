@@ -1,0 +1,122 @@
+---
+title: Checkout Class
+description: API reference for the Checkout class — the core SDK entry point.
+---
+
+The `Checkout` class is the main entry point for the SDK. It manages the signer call, iframe lifecycle, and completion handling.
+
+```typescript
+import { Checkout } from '@swype-org/checkout';
+```
+
+## Constructor
+
+```typescript
+new Checkout(config: CheckoutConfig)
+```
+
+Creates a new `Checkout` instance. Throws a `CheckoutError` with code `INVALID_REQUEST` if `config.signer` is missing or not a string/function.
+
+### CheckoutConfig
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `signer` | `string \| SignerFunction` | **required** | URL string for the signer endpoint, or a custom async function. When a string, the SDK sends a `POST` with a JSON `SignerRequest` body. When a function, the SDK calls it with a `SignerRequest` and expects a `Promise<SignerResponse>`. |
+| `webviewBaseUrl` | `string` | `'https://pay.tryblink.xyz'` | Base URL of the hosted payment webview app. The SDK appends `merchantId`, `payload`, and `signature` as query parameters. |
+| `hostedFlowOrigin` | `string` | Derived from `webviewBaseUrl` | Origin for `postMessage` validation. |
+| `containerElement` | `HTMLElement` | `document.body` | DOM element to mount the iframe overlay into. |
+| `signerTimeoutMs` | `number` | `15000` | Maximum milliseconds to wait for the signer to respond. |
+| `flowTimeoutMs` | `number` | `undefined` (no limit) | Maximum milliseconds for the entire flow (signer + user completion). |
+| `debug` | `boolean` | `false` | Log lifecycle events to `console.debug` with the `[SwypeCheckout]` prefix. |
+
+## Methods
+
+### requestDeposit
+
+```typescript
+checkout.requestDeposit(request: DepositRequest): Promise<DepositResult>
+```
+
+Opens the hosted payment flow for the given deposit. The returned Promise resolves when the user completes the payment and rejects with a `CheckoutError` on failure.
+
+If a flow is already active, calling `requestDeposit` again cancels the previous flow and starts a new one.
+
+Throws `CheckoutError` with code `INVALID_REQUEST` if the instance has been destroyed.
+
+See [Types](/sdk-reference/types) for `DepositRequest` and `DepositResult` definitions.
+
+### on
+
+```typescript
+checkout.on(event: EventName, handler: EventHandler): this
+```
+
+Register an event listener. Returns `this` for chaining. See [Events](/sdk-reference/events).
+
+### off
+
+```typescript
+checkout.off(event: EventName, handler: EventHandler): this
+```
+
+Remove a previously registered event listener. Returns `this` for chaining.
+
+### close
+
+```typescript
+checkout.close(): void
+```
+
+Close the checkout iframe without waiting for completion. Resets status to `idle` and fires the `close` event.
+
+### destroy
+
+```typescript
+checkout.destroy(): void
+```
+
+Tear down the instance and release all resources. Closes the iframe, removes all event listeners, and marks the instance as destroyed. Subsequent calls to `requestDeposit` will reject with `INVALID_REQUEST`.
+
+Call this on component unmount or page unload.
+
+### focus
+
+```typescript
+checkout.focus(): void
+```
+
+No-op. Retained for API compatibility.
+
+## Properties
+
+### status
+
+```typescript
+checkout.status: CheckoutStatus
+```
+
+Current phase of the checkout flow. One of `'idle'`, `'signer-loading'`, `'iframe-active'`, `'completed'`, or `'error'`.
+
+### result
+
+```typescript
+checkout.result: DepositResult | null
+```
+
+Last successful `DepositResult`, available when `status === 'completed'`.
+
+### error
+
+```typescript
+checkout.error: CheckoutError | null
+```
+
+Last `CheckoutError`, available when `status === 'error'`.
+
+### isActive
+
+```typescript
+checkout.isActive: boolean
+```
+
+`true` when a deposit flow is in progress (`status` is `'signer-loading'` or `'iframe-active'`).

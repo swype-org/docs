@@ -1,0 +1,62 @@
+---
+title: Generate Your Key Pair
+description: Create an ECDSA P-256 key pair for signing payment requests.
+---
+
+Blink uses **ECDSA with the P-256 curve (prime256v1) and SHA-256** for payload signing and verification. You generate a key pair: a private key (kept secret on your server) and a public key (registered with Blink).
+
+## Option A: OpenSSL (recommended for production)
+
+```bash
+# Generate a P-256 private key in PKCS#8 PEM format
+openssl ecparam -name prime256v1 -genkey -noout | \
+  openssl pkcs8 -topk8 -nocrypt -out private.pem
+
+# Extract the public key in SPKI PEM format
+openssl ec -in private.pem -pubout -out public.pem
+```
+
+## Option B: Node.js crypto module
+
+```javascript
+const { generateKeyPairSync } = require('node:crypto');
+
+const { privateKey, publicKey } = generateKeyPairSync('ec', {
+  namedCurve: 'prime256v1',
+});
+
+const privatePem = privateKey.export({ type: 'pkcs8', format: 'pem' });
+const publicPem = publicKey.export({ type: 'spki', format: 'pem' });
+
+require('node:fs').writeFileSync('private.pem', privatePem);
+require('node:fs').writeFileSync('public.pem', publicPem);
+```
+
+## Expected output
+
+`private.pem` (keep secret):
+
+```
+-----BEGIN PRIVATE KEY-----
+MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQg...
+-----END PRIVATE KEY-----
+```
+
+`public.pem` (share with Blink):
+
+```
+-----BEGIN PUBLIC KEY-----
+MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...
+-----END PUBLIC KEY-----
+```
+
+## Security requirements
+
+<Warning>
+The private key is your signing credential. If compromised, an attacker can create valid payment links on your behalf.
+</Warning>
+
+- **Never expose the private key** in client-side code, browser-accessible environment variables, or version control.
+- In production, store the private key in a secrets manager (AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager) or an HSM.
+- For local development, store it in a `.env` file that is git-ignored.
+- Plan for key rotation. Blink supports updating your public key by contacting the team.

@@ -1,0 +1,116 @@
+---
+title: Error Handling
+description: Error codes, CheckoutError class, and user-friendly error messages.
+---
+
+Every error thrown by the Checkout SDK is a `CheckoutError` instance with a machine-readable `code` property. This lets you branch on failure mode without parsing message strings.
+
+## CheckoutError
+
+```typescript
+import { CheckoutError, getDisplayMessage } from '@swype-org/checkout';
+```
+
+```typescript
+class CheckoutError extends Error {
+  readonly code: CheckoutErrorCode;
+  constructor(code: CheckoutErrorCode, message: string);
+}
+```
+
+## Error codes
+
+| Code | Meaning | User-facing message |
+|------|---------|---------------------|
+| `CHECKOUT_DISMISSED` | User dismissed the checkout (tapped backdrop, pressed Escape, or closed the flow). | "The checkout was dismissed before the transfer completed." |
+| `SIGNER_REQUEST_FAILED` | Signer returned a non-2xx response. | "Unable to start the payment. Please try again." |
+| `SIGNER_NETWORK_ERROR` | Network failure reaching the signer. | "Unable to reach the payment server. Check your connection and try again." |
+| `SIGNER_RESPONSE_INVALID` | Signer response missing required fields (`merchantId`, `payload`, `signature`, `expiresAt`). | "The payment server returned an unexpected response." |
+| `SIGNER_TIMEOUT` | Signer did not respond within `signerTimeoutMs`. | "The payment server took too long to respond. Please try again." |
+| `FLOW_TIMEOUT` | Entire flow exceeded `flowTimeoutMs`. | "The payment flow timed out. Please try again." |
+| `INVALID_REQUEST` | Bad input (missing amount, invalid address, destroyed instance, etc.). | "Invalid payment request. Please check your input." |
+
+## getDisplayMessage
+
+Returns a user-friendly display string for a `CheckoutError`. You can show this directly in your UI.
+
+```typescript
+function getDisplayMessage(error: CheckoutError): string
+```
+
+### Usage
+
+```typescript
+try {
+  await checkout.requestDeposit({ /* ... */ });
+} catch (err) {
+  if (err instanceof CheckoutError) {
+    // Show user-friendly message in your UI
+    showToast(getDisplayMessage(err));
+
+    // Log machine-readable code for debugging
+    console.error(err.code, err.message);
+  }
+}
+```
+
+### React
+
+The `useSwypeCheckout` hook provides `displayMessage` as a convenience:
+
+```tsx
+const { error, displayMessage } = useSwypeCheckout({ signer: '/api/sign-payment' });
+
+// displayMessage is null when there is no error,
+// otherwise it's the result of getDisplayMessage(error)
+{error && <p className="error">{displayMessage}</p>}
+```
+
+## Handling specific error codes
+
+```typescript
+try {
+  await checkout.requestDeposit({ /* ... */ });
+} catch (err) {
+  if (!(err instanceof CheckoutError)) throw err;
+
+  switch (err.code) {
+    case 'CHECKOUT_DISMISSED':
+      // User intentionally closed — no action needed
+      break;
+    case 'SIGNER_REQUEST_FAILED':
+    case 'SIGNER_NETWORK_ERROR':
+    case 'SIGNER_TIMEOUT':
+      // Signer issue — prompt retry
+      showRetryDialog(getDisplayMessage(err));
+      break;
+    case 'SIGNER_RESPONSE_INVALID':
+      // Integration bug — log for investigation
+      reportError(err);
+      break;
+    case 'FLOW_TIMEOUT':
+      // Flow took too long — prompt retry
+      showRetryDialog(getDisplayMessage(err));
+      break;
+    case 'INVALID_REQUEST':
+      // Bad input — show validation error
+      showValidationError(getDisplayMessage(err));
+      break;
+  }
+}
+```
+
+## CheckoutErrorCode
+
+The union of all error code strings:
+
+```typescript
+type CheckoutErrorCode =
+  | 'CHECKOUT_DISMISSED'
+  | 'SIGNER_REQUEST_FAILED'
+  | 'SIGNER_NETWORK_ERROR'
+  | 'SIGNER_RESPONSE_INVALID'
+  | 'SIGNER_TIMEOUT'
+  | 'FLOW_TIMEOUT'
+  | 'INVALID_REQUEST';
+```

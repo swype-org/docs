@@ -1,0 +1,78 @@
+---
+title: Testing
+description: Verify your Blink integration with the sample app and staging environment.
+---
+
+## Sample app reference
+
+The `sample-app/` directory in the Blink repository contains a working end-to-end integration. It demonstrates:
+
+- Checkout SDK initialization and `requestDeposit()` call (see `src/PaymentPage.tsx`)
+- A local dev signer endpoint via Vite middleware (see `vite.config.ts`)
+- Environment configuration (see `env.example`)
+
+## Local development signer
+
+For local testing, you can use the mock signer pattern from the sample app. The Vite dev server middleware handles `POST /api/mock-sign-payment-link` and signs requests using a private key from `.env.local`.
+
+Environment variables for the local signer:
+
+| Variable | Purpose | Example |
+|----------|---------|---------|
+| `SAMPLE_APP_MERCHANT_ID` | Your merchant UUID | `11111111-1111-4111-8111-111111111111` |
+| `SAMPLE_APP_LINK_TTL_SECONDS` | Payment link TTL in seconds | `600` |
+| `SAMPLE_APP_MERCHANT_PRIVATE_KEY` | PEM-encoded private key | `"-----BEGIN PRIVATE KEY-----\n..."` |
+
+## End-to-end verification
+
+Follow this sequence to verify your integration:
+
+<Steps>
+  <Step title="Generate a key pair">
+    Use the instructions in [Key Generation](/integration/key-generation).
+  </Step>
+  <Step title="Register the merchant">
+    Provide your public key to Blink ([Merchant Registration](/integration/merchant-registration)).
+  </Step>
+  <Step title="Configure your signer">
+    Set the private key and merchant ID on your signer endpoint.
+  </Step>
+  <Step title="Launch the checkout flow">
+    Call `requestDeposit()` from your app.
+  </Step>
+  <Step title="Complete a test payment">
+    Walk through the hosted flow iframe to complete a payment.
+  </Step>
+  <Step title="Verify the result">
+    The `DepositResult` should contain a `transfer.id` and `transfer.status`.
+  </Step>
+</Steps>
+
+## Staging environment
+
+For staging and shared environments:
+
+- Deploy your signer as a server endpoint or serverless function (e.g., AWS Lambda).
+- Store the private key in a secrets manager (e.g., AWS Secrets Manager).
+- Point the Checkout SDK's `signer` config at your deployed signer URL.
+- Set `webviewBaseUrl` to the Blink staging URL: `https://pay-staging.tryblink.xyz`.
+
+```typescript
+const checkout = new Checkout({
+  signer: 'https://your-staging-api.example.com/api/sign-payment',
+  webviewBaseUrl: 'https://pay-staging.tryblink.xyz',
+});
+```
+
+## Debug mode
+
+Enable debug logging to trace the full SDK lifecycle during development:
+
+```typescript
+const checkout = new Checkout({
+  signer: '/api/sign-payment',
+  debug: true,
+});
+```
+
+This logs signer calls, iframe state transitions, postMessage events, and errors to `console.debug` with the `[SwypeCheckout]` prefix.

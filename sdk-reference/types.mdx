@@ -1,0 +1,178 @@
+---
+title: TypeScript Types
+description: Complete type reference for the Checkout SDK.
+---
+
+All types are exported from the main entry point:
+
+```typescript
+import type {
+  CheckoutConfig,
+  CheckoutStatus,
+  DepositRequest,
+  DepositResult,
+  SignerFunction,
+  SignerRequest,
+  SignerResponse,
+  TransferSummary,
+  CheckoutErrorCode,
+} from '@swype-org/checkout';
+```
+
+## CheckoutStatus
+
+Current phase of the checkout flow.
+
+```typescript
+type CheckoutStatus =
+  | 'idle'
+  | 'signer-loading'
+  | 'iframe-active'
+  | 'completed'
+  | 'error';
+```
+
+## CheckoutConfig
+
+Configuration for a `Checkout` instance. See [Checkout Class](/sdk-reference/checkout-class) for detailed descriptions.
+
+```typescript
+interface CheckoutConfig {
+  signer: string | SignerFunction;
+  webviewBaseUrl?: string;
+  hostedFlowOrigin?: string;
+  containerElement?: HTMLElement;
+  signerTimeoutMs?: number;
+  flowTimeoutMs?: number;
+  debug?: boolean;
+}
+```
+
+## DepositRequest
+
+Parameters for a single deposit request.
+
+```typescript
+interface DepositRequest {
+  amount: number;
+  chainId: number;
+  address: string;
+  token: string;
+  callbackScheme?: string | null;
+  reference?: string;
+  metadata?: Record<string, string>;
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `amount` | `number` | Yes | USD amount to deposit. Must be > 0. |
+| `chainId` | `number` | Yes | EVM chain ID for the destination (e.g., `8453` for Base). |
+| `address` | `string` | Yes | Destination wallet address (0x-prefixed, 40 hex chars). |
+| `token` | `string` | Yes | Token contract address on the destination chain (0x-prefixed hex). |
+| `callbackScheme` | `string \| null` | No | Custom URL scheme for native app deep-link callbacks. Always `null` for browser. |
+| `reference` | `string` | No | Merchant order or invoice ID for reconciliation. |
+| `metadata` | `Record<string, string>` | No | Arbitrary key-value pairs forwarded to the signer. |
+
+## DepositResult
+
+Result returned when a deposit completes successfully.
+
+```typescript
+interface DepositResult {
+  transfer: TransferSummary;
+  idempotencyKey?: string;
+  preview?: {
+    amount: number;
+    chainId: number;
+    address: string;
+    token: string;
+  };
+}
+```
+
+## TransferSummary
+
+Subset of transfer data returned from the hosted flow on completion.
+
+```typescript
+interface TransferSummary {
+  id: string;
+  status: string;
+  amount?: {
+    amount: number;
+    currency: string;
+  };
+  destinations?: Array<{
+    chainId: string;
+    address: string;
+    token?: { address?: string; symbol?: string };
+  }>;
+}
+```
+
+## SignerRequest
+
+Data the SDK passes to the merchant signer.
+
+```typescript
+interface SignerRequest {
+  amount: number;
+  chainId: number;
+  address: string;
+  token: string;
+  callbackScheme: string | null;
+  url: string;
+  version: 'v1';
+  reference?: string;
+  metadata?: Record<string, string>;
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `amount` | `number` | USD amount to deposit. |
+| `chainId` | `number` | EVM chain ID for the destination. |
+| `address` | `string` | Destination wallet address. |
+| `token` | `string` | Token contract address on the destination chain. |
+| `callbackScheme` | `string \| null` | `null` for browser integrations. |
+| `url` | `string` | Base webview URL. Provided for logging/validation only. |
+| `version` | `'v1'` | Protocol version. |
+| `reference` | `string?` | Merchant order or invoice ID. |
+| `metadata` | `Record<string, string>?` | Arbitrary key-value pairs. |
+
+## SignerResponse
+
+Shape the merchant signer must return.
+
+```typescript
+interface SignerResponse {
+  merchantId: string;
+  payload: string;
+  signature: string;
+  expiresAt: string;
+  preview: {
+    amount: number;
+    chainId: number;
+    address: string;
+    token: string;
+    idempotencyKey: string;
+  };
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `merchantId` | `string` | Your merchant UUID. |
+| `payload` | `string` | Base64url-encoded payment payload. |
+| `signature` | `string` | Base64url-encoded ECDSA signature of the payload string. |
+| `expiresAt` | `string` | ISO 8601 expiration timestamp. |
+| `preview` | `object` | Echo of payment parameters for client-side display. |
+
+## SignerFunction
+
+Custom async function for full control over the signer call.
+
+```typescript
+type SignerFunction = (data: SignerRequest) => Promise<SignerResponse>;
+```

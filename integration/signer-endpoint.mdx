@@ -1,0 +1,324 @@
+---
+title: Build Your Signer Endpoint
+description: Create the server-side endpoint that validates and signs payment requests.
+---
+
+The signer is a **server-side** HTTP endpoint that receives a `SignerRequest` from the Checkout SDK, creates a signed payment link, and returns a `SignerResponse`. This is the core security mechanism — it ensures every payment was authorized by your server.
+
+## Request format
+
+The Checkout SDK sends a `POST` request with this JSON body to your signer URL:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `amount` | `number` | USD amount to deposit. Always > 0. |
+| `chainId` | `number` | EVM chain ID for the destination (e.g., `8453` for Base, `42161` for Arbitrum). |
+| `address` | `string` | Destination wallet address (0x-prefixed, 40 hex characters). |
+| `token` | `string` | Token contract address on the destination chain (0x-prefixed hex). For example, `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` for USDC on Base. |
+| `callbackScheme` | `string \| null` | Always `null` for browser integrations. Reserved for native app deep-link callbacks. |
+| `url` | `string` | Base webview URL the SDK will navigate to. Provided for logging/validation only — your signer does not construct the final URL. |
+| `version` | `string` | Protocol version (currently `"v1"`). |
+| `reference` | `string?` | Optional merchant order or invoice ID for reconciliation. |
+| `metadata` | `Record<string, string>?` | Optional arbitrary key-value pairs for your records. |
+
+Example request body:
+
+```json
+{
+  "amount": 50,
+  "chainId": 8453,
+  "address": "0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a",
+  "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+  "callbackScheme": null,
+  "url": "https://pay.tryblink.xyz",
+  "version": "v1",
+  "reference": "order-123",
+  "metadata": { "invoiceId": "INV-456" }
+}
+```
+
+## Implementation steps
+
+Your endpoint must perform these steps in order:
+
+### 1. Validate the request
+
+| Field | Validation Rule |
+|-------|-----------------|
+| `amount` | `Number.isFinite(amount) && amount > 0` |
+| `chainId` | `Number.isInteger(chainId) && chainId > 0` |
+| `address` | Matches `/^0x[a-fA-F0-9]{40}$/` |
+| `token` | Matches `/^0x[a-fA-F0-9]{1,40}$/` (contract address) |
+| `callbackScheme` | `null` or matches `/^[a-zA-Z][a-zA-Z0-9+\-.]*$/` |
+| `version` | Non-empty string (default to `"v1"` if missing) |
+
+Return HTTP 400 with an error message for any validation failure.
+
+### 2. Generate an idempotency key
+
+Generate a UUID v4 for this payment request. This prevents duplicate transfers if the user retries.
+
+```javascript
+const { randomUUID } = require('node:crypto');
+const idempotencyKey = randomUUID();
+```
+
+### 3. Compute the expiration timestamp
+
+Set an expiration for the payment link. A TTL of 600 seconds (10 minutes) is recommended.
+
+```javascript
+const linkTtlSeconds = 600;
+const expiresAt = new Date(Date.now() + linkTtlSeconds * 1000).toISOString();
+```
+
+### 4. Build the payload JSON
+
+```javascript
+const payloadObject = {
+  amount: request.amount,
+  chainId: request.chainId,
+  address: request.address,
+  token: request.token,
+  idempotencyKey,
+  callbackScheme: request.callbackScheme,
+  expiresAt,
+  version: request.version,
+};
+```
+
+### 5. Base64url-encode the payload
+
+Convert the JSON string to a base64url-encoded string. Base64url uses `-` instead of `+`, `_` instead of `/`, and no padding.
+
+```javascript
+const payload = Buffer.from(JSON.stringify(payloadObject), 'utf8').toString('base64url');
+```
+
+### 6. Sign the payload
+
+Sign the **encoded payload string** (not the raw JSON) using ECDSA P-256 with SHA-256, then base64url-encode the signature:
+
+```javascript
+const { createSign } = require('node:crypto');
+
+const signer = createSign('SHA256');
+signer.update(payload);
+signer.end();
+const signature = signer.sign(privateKeyPem).toString('base64url');
+```
+
+The input to the signing function is the base64url-encoded payload string (ASCII bytes). The output is the raw DER-encoded ECDSA signature, which is then base64url-encoded.
+
+### 7. Return the response
+
+## Response format
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `merchantId` | `string` | Your merchant UUID (from Blink registration). |
+| `payload` | `string` | Base64url-encoded payment payload. |
+| `signature` | `string` | Base64url-encoded ECDSA signature of the payload string. |
+| `expiresAt` | `string` | ISO 8601 expiration timestamp. |
+| `preview` | `object` | Echo of payment parameters for client-side display. |
+| `preview.amount` | `number` | Deposit amount. |
+| `preview.chainId` | `number` | Destination chain ID. |
+| `preview.address` | `string` | Destination wallet address. |
+| `preview.token` | `string` | Destination token contract address. |
+| `preview.idempotencyKey` | `string` | The generated idempotency key. |
+
+Example response:
+
+```json
+{
+  "merchantId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "payload": "eyJhbW91bnQiOjUwLCJjaGFpbklkIjo4NDUz...",
+  "signature": "MEUCIQC3k9F...",
+  "expiresAt": "2026-03-08T12:10:00.000Z",
+  "preview": {
+    "amount": 50,
+    "chainId": 8453,
+    "address": "0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a",
+    "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+    "idempotencyKey": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+  }
+}
+```
+
+## Complete Node.js implementation
+
+A copy-paste-ready Express.js signer endpoint. Replace `YOUR_MERCHANT_ID` and load your private key from a secure source.
+
+```javascript
+const express = require('express');
+const { randomUUID, createSign } = require('node:crypto');
+const fs = require('node:fs');
+
+const app = express();
+app.use(express.json());
+
+const MERCHANT_ID = process.env.MERCHANT_ID || 'YOUR_MERCHANT_ID';
+const LINK_TTL_SECONDS = parseInt(process.env.LINK_TTL_SECONDS || '600', 10);
+const PRIVATE_KEY_PEM = process.env.MERCHANT_PRIVATE_KEY
+  || fs.readFileSync('./private.pem', 'utf8');
+
+function encodeBase64Url(value) {
+  return Buffer.from(value, 'utf8').toString('base64url');
+}
+
+function signPayload(payload, privateKeyPem) {
+  const signer = createSign('SHA256');
+  signer.update(payload);
+  signer.end();
+  return signer.sign(privateKeyPem).toString('base64url');
+}
+
+function validateRequest(body) {
+  const errors = [];
+  const { amount, chainId, address, token, callbackScheme } = body;
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    errors.push('amount must be a positive number.');
+  }
+  if (!Number.isInteger(chainId) || chainId <= 0) {
+    errors.push('chainId must be a positive integer.');
+  }
+  if (typeof address !== 'string' || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    errors.push('address must be a 0x-prefixed, 40-character hex string.');
+  }
+  if (typeof token !== 'string' || !/^0x[a-fA-F0-9]{1,40}$/.test(token)) {
+    errors.push('token must be a 0x-prefixed hex contract address.');
+  }
+  if (
+    callbackScheme !== null &&
+    callbackScheme !== undefined &&
+    (typeof callbackScheme !== 'string' ||
+      !/^[a-zA-Z][a-zA-Z0-9+\-.]*$/.test(callbackScheme))
+  ) {
+    errors.push('callbackScheme must be null or a valid URI scheme.');
+  }
+
+  return errors;
+}
+
+app.post('/api/sign-payment', (req, res) => {
+  const errors = validateRequest(req.body);
+  if (errors.length > 0) {
+    return res.status(400).json({ error: errors.join(' ') });
+  }
+
+  const { amount, chainId, address, token, callbackScheme = null, version = 'v1' } = req.body;
+
+  const idempotencyKey = randomUUID();
+  const expiresAt = new Date(Date.now() + LINK_TTL_SECONDS * 1000).toISOString();
+
+  const payloadObject = {
+    amount, chainId, address, token,
+    idempotencyKey, callbackScheme, expiresAt, version,
+  };
+
+  const payload = encodeBase64Url(JSON.stringify(payloadObject));
+  const signature = signPayload(payload, PRIVATE_KEY_PEM);
+
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    merchantId: MERCHANT_ID,
+    payload,
+    signature,
+    expiresAt,
+    preview: { amount, chainId, address, token, idempotencyKey },
+  });
+});
+
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`Merchant signer listening on port ${PORT}`);
+});
+```
+
+## Python implementation
+
+For merchants using Python:
+
+```python
+import json
+import uuid
+import base64
+from datetime import datetime, timedelta, timezone
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import ec
+
+def base64url_encode(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b'=').decode('ascii')
+
+def sign_payment(
+    private_key_pem: str,
+    merchant_id: str,
+    amount: float,
+    chain_id: int,
+    address: str,
+    token: str,
+    callback_scheme: str | None = None,
+    version: str = "v1",
+    ttl_seconds: int = 600,
+) -> dict:
+    idempotency_key = str(uuid.uuid4())
+    expires_at = (datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)).isoformat()
+
+    payload_obj = {
+        "amount": amount,
+        "chainId": chain_id,
+        "address": address,
+        "token": token,
+        "idempotencyKey": idempotency_key,
+        "callbackScheme": callback_scheme,
+        "expiresAt": expires_at,
+        "version": version,
+    }
+
+    payload = base64url_encode(json.dumps(payload_obj).encode("utf-8"))
+
+    private_key = serialization.load_pem_private_key(private_key_pem.encode(), password=None)
+    signature_bytes = private_key.sign(
+        payload.encode("utf-8"),
+        ec.ECDSA(hashes.SHA256()),
+    )
+    signature = base64url_encode(signature_bytes)
+
+    return {
+        "merchantId": merchant_id,
+        "payload": payload,
+        "signature": signature,
+        "expiresAt": expires_at,
+        "preview": {
+            "amount": amount,
+            "chainId": chain_id,
+            "address": address,
+            "token": token,
+            "idempotencyKey": idempotency_key,
+        },
+    }
+```
+
+## Signing algorithm summary
+
+For merchants implementing the signer in any language:
+
+1. Build the payload as a JSON string with fields: `amount`, `chainId`, `address`, `token`, `idempotencyKey`, `callbackScheme`, `expiresAt`, `version`.
+2. Base64url-encode the JSON string (UTF-8 bytes to base64url, no padding).
+3. Sign the **base64url-encoded string** (not the raw JSON) using **ECDSA with P-256 (prime256v1/secp256r1) and SHA-256**. The input to the sign function is the ASCII bytes of the base64url string.
+4. Base64url-encode the raw signature bytes (DER format).
+5. Return the encoded payload, encoded signature, your merchant ID, expiration, and a preview object.
+
+## Security requirements
+
+<Warning>
+The signer endpoint is a security-critical component. A compromised signer allows unauthorized payment link creation.
+</Warning>
+
+- **HTTPS only** — never serve the signer over plain HTTP in production.
+- **Authenticate callers** — the signer should only accept requests from your own frontend. Use session cookies, auth tokens, or CORS restrictions.
+- **Short TTL** — keep `linkTtlSeconds` short (600 seconds recommended) to limit the window for replayed links.
+- **Rate limit** — protect against abuse by rate-limiting signer requests per user/session.
+- **Log, but never log the private key** — log request metadata for debugging, but never log the private key or raw signature in production.
+- **CORS** — configure CORS to only allow your frontend origin(s).
