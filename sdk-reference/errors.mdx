@@ -25,7 +25,7 @@ class CheckoutError extends Error {
 | `CHECKOUT_DISMISSED` | User dismissed the checkout (tapped backdrop, pressed Escape, or closed the flow). | "The checkout was dismissed before the transfer completed." |
 | `SIGNER_REQUEST_FAILED` | Signer returned a non-2xx response. | "Unable to start the payment. Please try again." |
 | `SIGNER_NETWORK_ERROR` | Network failure reaching the signer. | "Unable to reach the payment server. Check your connection and try again." |
-| `SIGNER_RESPONSE_INVALID` | Signer response missing required fields (`merchantId`, `payload`, `signature`, `expiresAt`). | "The payment server returned an unexpected response." |
+| `SIGNER_RESPONSE_INVALID` | Signer response missing required fields (`merchantId`, `payload`, `signature`, `preview`). | "The payment server returned an unexpected response." |
 | `SIGNER_TIMEOUT` | Signer did not respond within `signerTimeoutMs`. | "The payment server took too long to respond. Please try again." |
 | `FLOW_TIMEOUT` | Entire flow exceeded `flowTimeoutMs`. | "The payment flow timed out. Please try again." |
 | `INVALID_REQUEST` | Bad input (missing amount, invalid address, destroyed instance, etc.). | "Invalid payment request. Please check your input." |

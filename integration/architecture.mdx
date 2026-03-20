@@ -53,7 +53,7 @@ sequenceDiagram
 1. **Private key stays on your server.** The Checkout SDK never sees your private key. It only receives the signed payload from your signer endpoint.
 2. **Blink verifies every payment.** The hosted flow fetches your registered public key and verifies the ECDSA signature before showing any payment UI. A forged or tampered payload is rejected.
 3. **Idempotency keys prevent duplicates.** Each signer response includes a unique UUID. If the same idempotency key is submitted twice, the second transfer is rejected.
-4. **Short-lived links.** The signed payload includes an `expiresAt` timestamp (recommended: 10 minutes). Expired links are rejected by the hosted flow.
+4. **Short-lived links.** The signed payload includes a `signatureTimestamp`. Swype enforces a maximum signature age of 15 minutes server-side — expired links are rejected automatically.
 
 ## Iframe lifecycle
 

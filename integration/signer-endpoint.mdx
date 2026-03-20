@@ -101,13 +101,12 @@ const { randomUUID } = require('node:crypto');
 const idempotencyKey = randomUUID();
 ```
 
-### 4. Compute the expiration timestamp
+### 4. Record the signature timestamp
 
-Set an expiration for the payment link. A TTL of 600 seconds (10 minutes) is recommended.
+Record the current time as the signature timestamp. Swype enforces a maximum signature age of 15 minutes server-side, so you do not need to manage expiration TTLs yourself.
 
 ```javascript
-const linkTtlSeconds = 600;
-const expiresAt = new Date(Date.now() + linkTtlSeconds * 1000).toISOString();
+const signatureTimestamp = new Date().toISOString();
 ```
 
 ### 5. Build the payload JSON
@@ -120,7 +119,7 @@ const payloadObject = {
   token: request.token,
   idempotencyKey,
   callbackScheme: request.callbackScheme,
-  expiresAt,
+  signatureTimestamp,
   version: request.version,
 };
 ```
@@ -157,7 +156,6 @@ The input to the signing function is the base64url-encoded payload string (ASCII
 | `merchantId` | `string` | Your merchant UUID (from Blink registration). |
 | `payload` | `string` | Base64url-encoded payment payload. |
 | `signature` | `string` | Base64url-encoded ECDSA signature of the payload string. |
-| `expiresAt` | `string` | ISO 8601 expiration timestamp. |
 | `preview` | `object` | Echo of payment parameters for client-side display. |
 | `preview.amount` | `number` | Deposit amount. |
 | `preview.chainId` | `number` | Destination chain ID. |
@@ -172,7 +170,6 @@ Example response:
   "merchantId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
   "payload": "eyJhbW91bnQiOjUwLCJjaGFpbklkIjo4NDUz...",
   "signature": "MEUCIQC3k9F...",
-  "expiresAt": "2026-03-08T12:10:00.000Z",
   "preview": {
     "amount": 50,
     "chainId": 8453,
@@ -196,7 +193,6 @@ const app = express();
 app.use(express.json());
 
 const MERCHANT_ID = process.env.MERCHANT_ID || 'YOUR_MERCHANT_ID';
-const LINK_TTL_SECONDS = parseInt(process.env.LINK_TTL_SECONDS || '600', 10);
 const PRIVATE_KEY_PEM = process.env.MERCHANT_PRIVATE_KEY
   || fs.readFileSync('./private.pem', 'utf8');
 
@@ -248,11 +244,11 @@ app.post('/api/sign-payment', (req, res) => {
   const { amount, chainId, address, token, callbackScheme = null, version = 'v1' } = req.body;
 
   const idempotencyKey = randomUUID();
-  const expiresAt = new Date(Date.now() + LINK_TTL_SECONDS * 1000).toISOString();
+  const signatureTimestamp = new Date().toISOString();
 
   const payloadObject = {
     amount, chainId, address, token,
-    idempotencyKey, callbackScheme, expiresAt, version,
+    idempotencyKey, callbackScheme, signatureTimestamp, version,
   };
 
   const payload = encodeBase64Url(JSON.stringify(payloadObject));
@@ -263,7 +259,6 @@ app.post('/api/sign-payment', (req, res) => {
     merchantId: MERCHANT_ID,
     payload,
     signature,
-    expiresAt,
     preview: { amount, chainId, address, token, idempotencyKey },
   });
 });
@@ -282,7 +277,7 @@ For merchants using Python:
 import json
 import uuid
 import base64
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 
@@ -298,10 +293,9 @@ def sign_payment(
     token: str,
     callback_scheme: str | None = None,
     version: str = "v1",
-    ttl_seconds: int = 600,
 ) -> dict:
     idempotency_key = str(uuid.uuid4())
-    expires_at = (datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)).isoformat()
+    signature_timestamp = datetime.now(timezone.utc).isoformat()
 
     payload_obj = {
         "amount": amount,
@@ -310,7 +304,7 @@ def sign_payment(
         "token": token,
         "idempotencyKey": idempotency_key,
         "callbackScheme": callback_scheme,
-        "expiresAt": expires_at,
+        "signatureTimestamp": signature_timestamp,
         "version": version,
     }
 
@@ -327,7 +321,6 @@ def sign_payment(
         "merchantId": merchant_id,
         "payload": payload,
         "signature": signature,
-        "expiresAt": expires_at,
         "preview": {
             "amount": amount,
             "chainId": chain_id,
@@ -342,11 +335,11 @@ def sign_payment(
 
 For merchants implementing the signer in any language:
 
-1. Build the payload as a JSON string with fields: `amount`, `chainId`, `address`, `token`, `idempotencyKey`, `callbackScheme`, `expiresAt`, `version`.
+1. Build the payload as a JSON string with fields: `amount`, `chainId`, `address`, `token`, `idempotencyKey`, `callbackScheme`, `signatureTimestamp`, `version`.
 2. Base64url-encode the JSON string (UTF-8 bytes to base64url, no padding).
 3. Sign the **base64url-encoded string** (not the raw JSON) using **ECDSA with P-256 (prime256v1/secp256r1) and SHA-256**. The input to the sign function is the ASCII bytes of the base64url string.
 4. Base64url-encode the raw signature bytes (DER format).
-5. Return the encoded payload, encoded signature, your merchant ID, expiration, and a preview object.
+5. Return the encoded payload, encoded signature, your merchant ID, and a preview object.
 
 ## Security requirements
 
@@ -357,7 +350,7 @@ The signer endpoint is a security-critical component. A compromised signer allow
 - **HTTPS only** — never serve the signer over plain HTTP in production.
 - **Authenticate callers** — the signer should only accept requests from your own frontend. Use session cookies, auth tokens, or CORS restrictions.
 - **Verify destination ownership** — confirm the authenticated user controls the destination `address` before signing. Without this, a malicious user could redirect funds to a wallet they don't own. See [step 2](#2-verify-destination-ownership) above.
-- **Short TTL** — keep `linkTtlSeconds` short (600 seconds recommended) to limit the window for replayed links.
+- **Server-enforced expiry** — Swype enforces a maximum signature age of 15 minutes. Include `signatureTimestamp` in every payload so Swype can reject stale signatures. You do not need to manage expiration TTLs yourself.
 - **Rate limit** — protect against abuse by rate-limiting signer requests per user/session.
 - **Log, but never log the private key** — log request metadata for debugging, but never log the private key or raw signature in production.
 - **CORS** — configure CORS to only allow your frontend origin(s).

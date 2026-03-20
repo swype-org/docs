@@ -48,11 +48,11 @@ app.post('/api/sign-payment', (req, res) => {
   const { amount, chainId, address, token, callbackScheme = null, version = 'v1' } = req.body;
 
   const idempotencyKey = randomUUID();
-  const expiresAt = new Date(Date.now() + 600_000).toISOString();
+  const signatureTimestamp = new Date().toISOString();
 
   const payloadObject = {
     amount, chainId, address, token,
-    idempotencyKey, callbackScheme, expiresAt, version,
+    idempotencyKey, callbackScheme, signatureTimestamp, version,
   };
 
   const payload = Buffer.from(JSON.stringify(payloadObject), 'utf8').toString('base64url');
@@ -66,7 +66,6 @@ app.post('/api/sign-payment', (req, res) => {
     merchantId: MERCHANT_ID,
     payload,
     signature,
-    expiresAt,
     preview: { amount, chainId, address, token, idempotencyKey },
   });
 });
