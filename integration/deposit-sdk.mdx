@@ -1,24 +1,24 @@
 ---
-title: Integrate the Transfer SDK
-description: Install and configure the Transfer SDK to trigger payment flows from your frontend.
+title: Integrate the Deposit SDK
+description: Install and configure the Deposit SDK to trigger payment flows from your frontend.
 ---
 
-The Transfer SDK (`@swype-org/transfer`) opens Blink's hosted payment flow in a modal iframe overlay. On mobile viewports (480px or narrower), the iframe renders full-screen for an app-like experience. The SDK handles the signer call, iframe lifecycle, passkey/WebAuthn delegation, and completion detection via `postMessage`.
+The Deposit SDK (`@swype-org/deposit`) opens Blink's hosted payment flow in a modal iframe overlay. On mobile viewports (480px or narrower), the iframe renders full-screen for an app-like experience. The SDK handles the signer call, iframe lifecycle, passkey/WebAuthn delegation, and completion detection via `postMessage`.
 
 ## Install
 
 <CodeGroup>
 
 ```bash npm
-npm install @swype-org/transfer
+npm install @swype-org/deposit
 ```
 
 ```bash yarn
-yarn add @swype-org/transfer
+yarn add @swype-org/deposit
 ```
 
 ```bash pnpm
-pnpm add @swype-org/transfer
+pnpm add @swype-org/deposit
 ```
 
 </CodeGroup>
@@ -26,15 +26,15 @@ pnpm add @swype-org/transfer
 ## Vanilla JavaScript
 
 ```typescript
-import { Transfer, TransferError, getDisplayMessage } from '@swype-org/transfer';
+import { Deposit, DepositError, getDisplayMessage } from '@swype-org/deposit';
 
-const transfer = new Transfer({
+const deposit = new Deposit({
   signer: '/api/sign-payment',
 });
 
 document.getElementById('transfer-btn')!.addEventListener('click', async () => {
   try {
-    const { transfer: result } = await transfer.requestDeposit({
+    const { transfer: result } = await deposit.requestDeposit({
       amount: 50,
       chainId: 8453,
       address: '0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a',
@@ -42,7 +42,7 @@ document.getElementById('transfer-btn')!.addEventListener('click', async () => {
     });
     console.log('Transfer complete:', result.id, result.status);
   } catch (error) {
-    if (error instanceof TransferError) {
+    if (error instanceof DepositError) {
       showErrorToUser(getDisplayMessage(error));
     }
   }
@@ -52,10 +52,10 @@ document.getElementById('transfer-btn')!.addEventListener('click', async () => {
 ## React hook
 
 ```tsx
-import { useBlinkTransfer } from '@swype-org/transfer/react';
+import { useBlinkDeposit } from '@swype-org/deposit/react';
 
 function TransferButton() {
-  const { status, result, error, displayMessage, requestDeposit } = useBlinkTransfer({
+  const { status, result, error, displayMessage, requestDeposit } = useBlinkDeposit({
     signer: '/api/sign-payment',
   });
 
@@ -80,12 +80,12 @@ function TransferButton() {
 }
 ```
 
-The hook returns reactive `status`, `result`, `error`, `displayMessage`, and `isActive` values, plus `requestDeposit`, `focus`, and `close` actions. It manages the `Transfer` lifecycle and cleans up on unmount.
+The hook returns reactive `status`, `result`, `error`, `displayMessage`, and `isActive` values, plus `requestDeposit`, `focus`, and `close` actions. It manages the `Deposit` lifecycle and cleans up on unmount.
 
 ## Configuration
 
 ```typescript
-const transfer = new Transfer({
+const deposit = new Deposit({
   // Required: URL string or custom async function
   signer: '/api/sign-payment',
 
@@ -115,9 +115,9 @@ const transfer = new Transfer({
 If you need full control over the HTTP call to your signer (custom headers, auth tokens, different HTTP method), pass a function instead of a URL:
 
 ```typescript
-import type { SignerFunction } from '@swype-org/transfer';
+import type { SignerFunction } from '@swype-org/deposit';
 
-const transfer = new Transfer({
+const deposit = new Deposit({
   signer: async (data) => {
     const res = await fetch('/api/sign-payment', {
       method: 'POST',
@@ -188,25 +188,25 @@ interface TransferSummary {
 | `error` | Something failed. |
 
 ```typescript
-transfer.on('status-change', (status) => console.log('Status:', status));
+deposit.on('status-change', (status) => console.log('Status:', status));
 
-transfer.status;    // current status
-transfer.result;    // last DepositResult (when completed)
-transfer.error;     // last TransferError (when error)
-transfer.isActive;  // true during signer-loading or iframe-active
+deposit.status;    // current status
+deposit.result;    // last DepositResult (when completed)
+deposit.error;     // last DepositError (when error)
+deposit.isActive;  // true during signer-loading or iframe-active
 ```
 
 ## Error handling
 
-See [Error Codes](/sdk-reference/errors) for the full reference. Every error is a `TransferError` with a machine-readable `code`:
+See [Error Codes](/sdk-reference/errors) for the full reference. Every error is a `DepositError` with a machine-readable `code`:
 
 ```typescript
-import { TransferError, getDisplayMessage } from '@swype-org/transfer';
+import { DepositError, getDisplayMessage } from '@swype-org/deposit';
 
 try {
-  await transfer.requestDeposit({ /* ... */ });
+  await deposit.requestDeposit({ /* ... */ });
 } catch (err) {
-  if (err instanceof TransferError) {
+  if (err instanceof DepositError) {
     showToast(getDisplayMessage(err));
     console.error(err.code, err.message);
   }
@@ -216,11 +216,11 @@ try {
 ## Lifecycle
 
 ```typescript
-// Close the transfer iframe without waiting for completion
-transfer.close();
+// Close the deposit iframe without waiting for completion
+deposit.close();
 
 // Tear down and release all resources (call on unmount / page unload)
-transfer.destroy();
+deposit.destroy();
 ```
 
 ## Metadata and order reference
@@ -228,7 +228,7 @@ transfer.destroy();
 Pass merchant-specific data through the flow for reconciliation:
 
 ```typescript
-await transfer.requestDeposit({
+await deposit.requestDeposit({
   amount: 50,
   chainId: 8453,
   address: '0x...',

@@ -3,11 +3,11 @@ title: Build Your Signer Endpoint
 description: Create the server-side endpoint that validates and signs payment requests.
 ---
 
-The signer is a **server-side** HTTP endpoint that receives a `SignerRequest` from the Transfer SDK, creates a signed payment link, and returns a `SignerResponse`. This is the core security mechanism — it ensures every payment was authorized by your server.
+The signer is a **server-side** HTTP endpoint that receives a `SignerRequest` from the Deposit SDK, creates a signed payment link, and returns a `SignerResponse`. This is the core security mechanism — it ensures every payment was authorized by your server.
 
 ## Request format
 
-The Transfer SDK sends a `POST` request with this JSON body to your signer URL:
+The Deposit SDK sends a `POST` request with this JSON body to your signer URL:
 
 | Field | Type | Description |
 |-------|------|-------------|
