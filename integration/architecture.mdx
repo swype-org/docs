@@ -12,7 +12,7 @@ sequenceDiagram
     participant User
     participant MerchantApp as Merchant App
     participant Signer as Merchant Signer (your server)
-    participant SDK as Transfer SDK
+    participant SDK as Deposit SDK
     participant HostedFlow as Hosted Flow (Blink)
     participant BlinkAPI as Blink API
 
@@ -37,20 +37,20 @@ sequenceDiagram
 
 | Component | Runs on | Responsibility |
 |-----------|---------|----------------|
-| **Merchant App** | Browser | Your frontend. Calls `requestDeposit()` on the Transfer SDK when the user wants to pay. |
+| **Merchant App** | Browser | Your frontend. Calls `requestDeposit()` on the Deposit SDK when the user wants to pay. |
 | **Merchant Signer** | Your server | Validates payment requests, generates an idempotency key, builds a JSON payload, signs it with your ECDSA P-256 private key, and returns the signed response. |
 
 ### Blink side
 
 | Component | Runs on | Responsibility |
 |-----------|---------|----------------|
-| **Transfer SDK** | Browser (in your app) | Orchestrates the signer call, opens the iframe, and listens for the completion `postMessage`. Published as `@swype-org/transfer`. |
+| **Deposit SDK** | Browser (in your app) | Orchestrates the signer call, opens the iframe, and listens for the completion `postMessage`. Published as `@swype-org/deposit`. |
 | **Hosted Flow** | Browser (iframe) | Blink's payment UI. Verifies the merchant signature, authenticates the user, handles wallet connection, and executes the on-chain transfer. |
 | **Blink API** | Server | Stores merchant public keys, creates transfers, manages wallets and accounts. |
 
 ## Security model
 
-1. **Private key stays on your server.** The Transfer SDK never sees your private key. It only receives the signed payload from your signer endpoint.
+1. **Private key stays on your server.** The Deposit SDK never sees your private key. It only receives the signed payload from your signer endpoint.
 2. **Blink verifies every payment.** The hosted flow fetches your registered public key and verifies the ECDSA signature before showing any payment UI. A forged or tampered payload is rejected.
 3. **Idempotency keys prevent duplicates.** Each signer response includes a unique UUID. If the same idempotency key is submitted twice, the second transfer is rejected.
 4. **Short-lived links.** The signed payload includes a `signatureTimestamp`. Blink enforces a maximum signature age of 15 minutes server-side — expired links are rejected automatically.

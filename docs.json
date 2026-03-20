@@ -39,7 +39,7 @@
         "tab": "SDK Reference",
         "groups": [
           {
-            "group": "Transfer SDK",
+            "group": "Deposit SDK",
             "pages": [
               "sdk-reference/checkout-class",
               "sdk-reference/react-hook",

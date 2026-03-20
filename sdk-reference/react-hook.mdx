@@ -1,12 +1,12 @@
 ---
 title: React Hook
-description: API reference for the useBlinkTransfer React hook.
+description: API reference for the useBlinkDeposit React hook.
 ---
 
-The `useBlinkTransfer` hook wraps the `Transfer` class with reactive React state. It manages the instance lifecycle and cleans up on unmount.
+The `useBlinkDeposit` hook wraps the `Deposit` class with reactive React state. It manages the instance lifecycle and cleans up on unmount.
 
 ```typescript
-import { useBlinkTransfer } from '@swype-org/transfer/react';
+import { useBlinkDeposit } from '@swype-org/deposit/react';
 ```
 
 <Info>
@@ -16,7 +16,7 @@ The React entry point requires `react` >= 18 as a peer dependency.
 ## Usage
 
 ```tsx
-function TransferButton() {
+function DepositButton() {
   const {
     status,
     result,
@@ -26,7 +26,7 @@ function TransferButton() {
     requestDeposit,
     focus,
     close,
-  } = useBlinkTransfer({
+  } = useBlinkDeposit({
     signer: '/api/sign-payment',
   });
 
@@ -54,24 +54,24 @@ function TransferButton() {
 
 ## Parameters
 
-The hook accepts a single `TransferConfig` object. See [Transfer Class](/sdk-reference/checkout-class) for the full config reference.
+The hook accepts a single `DepositConfig` object. See [Deposit Class](/sdk-reference/checkout-class) for the full config reference.
 
 ```typescript
-useBlinkTransfer(config: TransferConfig): UseBlinkTransferReturn
+useBlinkDeposit(config: DepositConfig): UseBlinkDepositReturn
 ```
 
-The `Transfer` instance is created once on first render and destroyed on unmount. The `config` is read during initialization only — changing config props after mount does not reconfigure the instance.
+The `Deposit` instance is created once on first render and destroyed on unmount. The `config` is read during initialization only — changing config props after mount does not reconfigure the instance.
 
 ## Return value
 
 | Property | Type | Description |
 |----------|------|-------------|
-| `status` | `TransferStatus` | Current phase: `'idle'`, `'signer-loading'`, `'iframe-active'`, `'completed'`, or `'error'`. |
+| `status` | `DepositStatus` | Current phase: `'idle'`, `'signer-loading'`, `'iframe-active'`, `'completed'`, or `'error'`. |
 | `result` | `DepositResult \| null` | Last successful deposit result. Reset to `null` when a new deposit starts. |
-| `error` | `TransferError \| null` | Last transfer error. Reset to `null` on successful completion. |
+| `error` | `DepositError \| null` | Last transfer error. Reset to `null` on successful completion. |
 | `displayMessage` | `string \| null` | User-friendly error message derived from `error` via `getDisplayMessage()`, or `null` when there is no error. |
 | `isActive` | `boolean` | `true` when `status` is `'signer-loading'` or `'iframe-active'`. |
-| `requestDeposit` | `(request: DepositRequest) => Promise<DepositResult>` | Start a transfer flow. Opens the modal iframe with the hosted transfer. |
+| `requestDeposit` | `(request: DepositRequest) => Promise<DepositResult>` | Start a deposit flow. Opens the modal iframe with the hosted transfer. |
 | `focus` | `() => void` | No-op. Retained for API compatibility. |
 | `close` | `() => void` | Close the transfer iframe and reset to idle. |
 
@@ -81,11 +81,11 @@ The React entry point re-exports commonly used types for convenience:
 
 ```typescript
 import type {
-  TransferConfig,
-  TransferStatus,
+  DepositConfig,
+  DepositStatus,
   DepositRequest,
   DepositResult,
-} from '@swype-org/transfer/react';
+} from '@swype-org/deposit/react';
 
-import { TransferError, getDisplayMessage } from '@swype-org/transfer/react';
+import { DepositError, getDisplayMessage } from '@swype-org/deposit/react';
 ```

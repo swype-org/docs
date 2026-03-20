@@ -3,7 +3,7 @@ title: Events and Lifecycle
 description: Event system, status transitions, and instance lifecycle management.
 ---
 
-The `Transfer` class emits events during the payment flow. Use `on()` and `off()` to subscribe and unsubscribe.
+The `Deposit` class emits events during the payment flow. Use `on()` and `off()` to subscribe and unsubscribe.
 
 ## Events
 
@@ -12,7 +12,7 @@ The `Transfer` class emits events during the payment flow. Use `on()` and `off()
 Fired when the payment completes successfully. The handler receives a `DepositResult`.
 
 ```typescript
-transfer.on('complete', (result: DepositResult) => {
+deposit.on('complete', (result: DepositResult) => {
   console.log('Transfer ID:', result.transfer.id);
   console.log('Status:', result.transfer.status);
 });
@@ -20,10 +20,10 @@ transfer.on('complete', (result: DepositResult) => {
 
 ### error
 
-Fired when the payment flow fails. The handler receives a `TransferError`.
+Fired when the payment flow fails. The handler receives a `DepositError`.
 
 ```typescript
-transfer.on('error', (error: TransferError) => {
+deposit.on('error', (error: DepositError) => {
   console.error('Transfer failed:', error.code, error.message);
 });
 ```
@@ -33,17 +33,17 @@ transfer.on('error', (error: TransferError) => {
 Fired when the transfer iframe is dismissed (user tapped backdrop, pressed Escape, or the flow was closed programmatically).
 
 ```typescript
-transfer.on('close', () => {
+deposit.on('close', () => {
   console.log('Transfer closed');
 });
 ```
 
 ### status-change
 
-Fired on every status transition. The handler receives the new `TransferStatus`.
+Fired on every status transition. The handler receives the new `DepositStatus`.
 
 ```typescript
-transfer.on('status-change', (status: TransferStatus) => {
+deposit.on('status-change', (status: DepositStatus) => {
   console.log('Status:', status);
 });
 ```
@@ -80,16 +80,16 @@ const onComplete = (result: DepositResult) => {
 };
 
 // Subscribe
-transfer.on('complete', onComplete);
+deposit.on('complete', onComplete);
 
 // Unsubscribe
-transfer.off('complete', onComplete);
+deposit.off('complete', onComplete);
 ```
 
 Both `on()` and `off()` return `this` for chaining:
 
 ```typescript
-transfer
+deposit
   .on('complete', handleComplete)
   .on('error', handleError)
   .on('close', handleClose);
@@ -102,7 +102,7 @@ transfer
 Closes the transfer iframe and resets status to `idle`. Fires the `close` event. Does not destroy the instance — you can call `requestDeposit()` again.
 
 ```typescript
-transfer.close();
+deposit.close();
 ```
 
 ### destroy()
@@ -113,9 +113,9 @@ Call this when the component unmounts or the page unloads.
 
 ```typescript
 // Vanilla JS — on page unload
-window.addEventListener('beforeunload', () => transfer.destroy());
+window.addEventListener('beforeunload', () => deposit.destroy());
 
-// React — handled automatically by useBlinkTransfer
+// React — handled automatically by useBlinkDeposit
 ```
 
 <Warning>
@@ -124,7 +124,7 @@ Always call `destroy()` when the transfer is no longer needed to prevent memory 
 
 ## React lifecycle
 
-The `useBlinkTransfer` hook manages the `Transfer` instance lifecycle automatically:
+The `useBlinkDeposit` hook manages the `Deposit` instance lifecycle automatically:
 
 - Creates the instance on first render.
 - Subscribes to `status-change`, `complete`, and `error` events.

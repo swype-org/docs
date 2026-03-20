@@ -1,20 +1,20 @@
 ---
 title: Error Handling
-description: Error codes, TransferError class, and user-friendly error messages.
+description: Error codes, DepositError class, and user-friendly error messages.
 ---
 
-Every error thrown by the Transfer SDK is a `TransferError` instance with a machine-readable `code` property. This lets you branch on failure mode without parsing message strings.
+Every error thrown by the Deposit SDK is a `DepositError` instance with a machine-readable `code` property. This lets you branch on failure mode without parsing message strings.
 
-## TransferError
+## DepositError
 
 ```typescript
-import { TransferError, getDisplayMessage } from '@swype-org/transfer';
+import { DepositError, getDisplayMessage } from '@swype-org/deposit';
 ```
 
 ```typescript
-class TransferError extends Error {
-  readonly code: TransferErrorCode;
-  constructor(code: TransferErrorCode, message: string);
+class DepositError extends Error {
+  readonly code: DepositErrorCode;
+  constructor(code: DepositErrorCode, message: string);
 }
 ```
 
@@ -22,7 +22,7 @@ class TransferError extends Error {
 
 | Code | Meaning | User-facing message |
 |------|---------|---------------------|
-| `TRANSFER_DISMISSED` | User dismissed the transfer (tapped backdrop, pressed Escape, or closed the flow). | "The transfer was dismissed before the transfer completed." |
+| `DEPOSIT_DISMISSED` | User dismissed the transfer (tapped backdrop, pressed Escape, or closed the flow). | "The transfer was dismissed before the transfer completed." |
 | `SIGNER_REQUEST_FAILED` | Signer returned a non-2xx response. | "Unable to start the payment. Please try again." |
 | `SIGNER_NETWORK_ERROR` | Network failure reaching the signer. | "Unable to reach the payment server. Check your connection and try again." |
 | `SIGNER_RESPONSE_INVALID` | Signer response missing required fields (`merchantId`, `payload`, `signature`, `preview`). | "The payment server returned an unexpected response." |
@@ -32,19 +32,19 @@ class TransferError extends Error {
 
 ## getDisplayMessage
 
-Returns a user-friendly display string for a `TransferError`. You can show this directly in your UI.
+Returns a user-friendly display string for a `DepositError`. You can show this directly in your UI.
 
 ```typescript
-function getDisplayMessage(error: TransferError): string
+function getDisplayMessage(error: DepositError): string
 ```
 
 ### Usage
 
 ```typescript
 try {
-  await transfer.requestDeposit({ /* ... */ });
+  await deposit.requestDeposit({ /* ... */ });
 } catch (err) {
-  if (err instanceof TransferError) {
+  if (err instanceof DepositError) {
     // Show user-friendly message in your UI
     showToast(getDisplayMessage(err));
 
@@ -56,10 +56,10 @@ try {
 
 ### React
 
-The `useBlinkTransfer` hook provides `displayMessage` as a convenience:
+The `useBlinkDeposit` hook provides `displayMessage` as a convenience:
 
 ```tsx
-const { error, displayMessage } = useBlinkTransfer({ signer: '/api/sign-payment' });
+const { error, displayMessage } = useBlinkDeposit({ signer: '/api/sign-payment' });
 
 // displayMessage is null when there is no error,
 // otherwise it's the result of getDisplayMessage(error)
@@ -70,12 +70,12 @@ const { error, displayMessage } = useBlinkTransfer({ signer: '/api/sign-payment'
 
 ```typescript
 try {
-  await transfer.requestDeposit({ /* ... */ });
+  await deposit.requestDeposit({ /* ... */ });
 } catch (err) {
-  if (!(err instanceof TransferError)) throw err;
+  if (!(err instanceof DepositError)) throw err;
 
   switch (err.code) {
-    case 'TRANSFER_DISMISSED':
+    case 'DEPOSIT_DISMISSED':
       // User intentionally closed — no action needed
       break;
     case 'SIGNER_REQUEST_FAILED':
@@ -100,13 +100,13 @@ try {
 }
 ```
 
-## TransferErrorCode
+## DepositErrorCode
 
 The union of all error code strings:
 
 ```typescript
-type TransferErrorCode =
-  | 'TRANSFER_DISMISSED'
+type DepositErrorCode =
+  | 'DEPOSIT_DISMISSED'
   | 'SIGNER_REQUEST_FAILED'
   | 'SIGNER_NETWORK_ERROR'
   | 'SIGNER_RESPONSE_INVALID'

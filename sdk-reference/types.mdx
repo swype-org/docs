@@ -1,30 +1,30 @@
 ---
 title: TypeScript Types
-description: Complete type reference for the Transfer SDK.
+description: Complete type reference for the Deposit SDK.
 ---
 
 All types are exported from the main entry point:
 
 ```typescript
 import type {
-  TransferConfig,
-  TransferStatus,
+  DepositConfig,
+  DepositStatus,
   DepositRequest,
   DepositResult,
   SignerFunction,
   SignerRequest,
   SignerResponse,
   TransferSummary,
-  TransferErrorCode,
-} from '@swype-org/transfer';
+  DepositErrorCode,
+} from '@swype-org/deposit';
 ```
 
-## TransferStatus
+## DepositStatus
 
-Current phase of the transfer flow.
+Current phase of the deposit flow.
 
 ```typescript
-type TransferStatus =
+type DepositStatus =
   | 'idle'
   | 'signer-loading'
   | 'iframe-active'
@@ -32,12 +32,12 @@ type TransferStatus =
   | 'error';
 ```
 
-## TransferConfig
+## DepositConfig
 
-Configuration for a `Transfer` instance. See [Transfer Class](/sdk-reference/checkout-class) for detailed descriptions.
+Configuration for a `Deposit` instance. See [Deposit Class](/sdk-reference/checkout-class) for detailed descriptions.
 
 ```typescript
-interface TransferConfig {
+interface DepositConfig {
   signer: string | SignerFunction;
   webviewBaseUrl?: string;
   hostedFlowOrigin?: string;

@@ -12,12 +12,12 @@ integration/                     # Step-by-step integration guide
   key-generation.mdx             # Generate ECDSA P-256 key pair
   merchant-registration.mdx      # Register with Blink
   signer-endpoint.mdx            # Build the signer endpoint (Node.js + Python)
-  transfer-sdk.mdx               # Integrate the Transfer SDK
+  transfer-sdk.mdx               # Integrate the Deposit SDK
   testing.mdx                    # Testing and staging setup
   production-checklist.mdx       # Go-live checklist
-sdk-reference/                   # Transfer SDK API reference
-  checkout-class.mdx             # Transfer class API
-  react-hook.mdx                 # useBlinkTransfer hook API
+sdk-reference/                   # Deposit SDK API reference
+  checkout-class.mdx             # Deposit class API
+  react-hook.mdx                 # useBlinkDeposit hook API
   types.mdx                      # TypeScript types reference
   errors.mdx                     # Error codes and getDisplayMessage
   events.mdx                     # Events, status transitions, lifecycle

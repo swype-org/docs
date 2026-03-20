@@ -24,12 +24,12 @@ Before going live, verify each item:
 - [ ] Error responses do not leak internal details (stack traces, key paths, etc.).
 - [ ] CORS configured to only allow your frontend origin(s).
 
-## Transfer SDK
+## Deposit SDK
 
 - [ ] SDK installed and configured with production `signer` URL.
 - [ ] `webviewBaseUrl` set to the Blink production URL (confirm with Blink).
-- [ ] Error handling implemented with `TransferError` codes and user-friendly messages via `getDisplayMessage()`.
-- [ ] `transfer.destroy()` called on component unmount / page unload.
+- [ ] Error handling implemented with `DepositError` codes and user-friendly messages via `getDisplayMessage()`.
+- [ ] `deposit.destroy()` called on component unmount / page unload.
 - [ ] Viewport meta tag set correctly for mobile (no unexpected scaling).
 
 ## Monitoring and reconciliation

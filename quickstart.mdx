@@ -1,6 +1,6 @@
 ---
 title: Quickstart
-description: Get a working Blink transfer integration in 5 minutes.
+description: Get a working Blink deposit integration in 5 minutes.
 ---
 
 This guide gets you from zero to a working payment flow. You will install the SDK, set up a minimal signer endpoint, and trigger your first transfer.
@@ -15,15 +15,15 @@ This guide gets you from zero to a working payment flow. You will install the SD
 <CodeGroup>
 
 ```bash npm
-npm install @swype-org/transfer
+npm install @swype-org/deposit
 ```
 
 ```bash yarn
-yarn add @swype-org/transfer
+yarn add @swype-org/deposit
 ```
 
 ```bash pnpm
-pnpm add @swype-org/transfer
+pnpm add @swype-org/deposit
 ```
 
 </CodeGroup>
@@ -87,15 +87,15 @@ See [Build Your Signer Endpoint](/integration/signer-endpoint) for the full impl
 ### Vanilla JavaScript
 
 ```typescript
-import { Transfer, TransferError, getDisplayMessage } from '@swype-org/transfer';
+import { Deposit, DepositError, getDisplayMessage } from '@swype-org/deposit';
 
-const transfer = new Transfer({
+const deposit = new Deposit({
   signer: '/api/sign-payment',
 });
 
 document.getElementById('transfer-btn').addEventListener('click', async () => {
   try {
-    const { transfer: result } = await transfer.requestDeposit({
+    const { transfer: result } = await deposit.requestDeposit({
       amount: 50,
       chainId: 8453,
       address: '0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a',
@@ -103,7 +103,7 @@ document.getElementById('transfer-btn').addEventListener('click', async () => {
     });
     console.log('Transfer complete:', result.id, result.status);
   } catch (error) {
-    if (error instanceof TransferError) {
+    if (error instanceof DepositError) {
       alert(getDisplayMessage(error));
     }
   }
@@ -113,14 +113,14 @@ document.getElementById('transfer-btn').addEventListener('click', async () => {
 ### React
 
 ```tsx
-import { useBlinkTransfer } from '@swype-org/transfer/react';
+import { useBlinkDeposit } from '@swype-org/deposit/react';
 
-function TransferButton() {
-  const { status, result, error, displayMessage, requestDeposit } = useBlinkTransfer({
+function DepositButton() {
+  const { status, result, error, displayMessage, requestDeposit } = useBlinkDeposit({
     signer: '/api/sign-payment',
   });
 
-  const handleTransfer = () => {
+  const handleDeposit = () => {
     requestDeposit({
       amount: 50,
       chainId: 8453,
@@ -131,7 +131,7 @@ function TransferButton() {
 
   return (
     <>
-      <button onClick={handleTransfer} disabled={status === 'signer-loading'}>
+      <button onClick={handleDeposit} disabled={status === 'signer-loading'}>
         {status === 'signer-loading' ? 'Preparing...' : 'Deposit $50'}
       </button>
       {error && <p className="error">{displayMessage}</p>}
@@ -143,7 +143,7 @@ function TransferButton() {
 
 ## What's next
 
-You now have a working transfer flow. To go to production:
+You now have a working deposit flow. To go to production:
 
 <Steps>
   <Step title="Generate a production key pair">
@@ -156,7 +156,7 @@ You now have a working transfer flow. To go to production:
     [Signer Endpoint](/integration/signer-endpoint) — add request validation, authentication, rate limiting, and CORS.
   </Step>
   <Step title="Handle errors gracefully">
-    [Error Handling](/sdk-reference/errors) — use `TransferError` codes and `getDisplayMessage()` in your UI.
+    [Error Handling](/sdk-reference/errors) — use `DepositError` codes and `getDisplayMessage()` in your UI.
   </Step>
   <Step title="Run the production checklist">
     [Production Checklist](/integration/production-checklist) — verify every item before going live.

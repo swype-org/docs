@@ -1,13 +1,13 @@
 ---
 title: Introduction
-description: Accept payments with Blink — a hosted transfer flow for merchant applications.
+description: Accept payments with Blink — a hosted deposit flow for merchant applications.
 ---
 
-Blink lets merchants accept payments through a hosted transfer flow. Your app opens a secure modal iframe powered by Blink, and your users complete the payment without leaving your site. There is nothing to PCI-scope, no wallet UI to build, and no on-chain logic to manage.
+Blink lets merchants accept payments through a hosted deposit flow. Your app opens a secure modal iframe powered by Blink, and your users complete the payment without leaving your site. There is nothing to PCI-scope, no wallet UI to build, and no on-chain logic to manage.
 
 ## How it works
 
-1. Your frontend calls the Transfer SDK with a transfer amount and destination.
+1. Your frontend calls the Deposit SDK with a transfer amount and destination.
 2. The SDK calls your **signer endpoint** — a server-side route you build that signs each payment request with your ECDSA private key.
 3. The SDK opens a **modal iframe** containing Blink's hosted payment UI.
 4. The user authenticates, connects a wallet, and completes the payment inside the iframe.
@@ -16,7 +16,7 @@ Blink lets merchants accept payments through a hosted transfer flow. Your app op
 ```mermaid
 sequenceDiagram
     participant App as Your App
-    participant SDK as Transfer SDK
+    participant SDK as Deposit SDK
     participant Signer as Your Signer (server)
     participant BlinkFlow as Blink Hosted Flow
 
@@ -34,7 +34,7 @@ sequenceDiagram
 | Component | Where | What |
 |-----------|-------|------|
 | **Signer endpoint** | Your server | An HTTP endpoint that validates payment requests, signs them with your private key, and returns a `SignerResponse`. |
-| **Transfer integration** | Your frontend | A few lines of code using the `@swype-org/transfer` SDK (vanilla JS or React) to trigger the payment flow. |
+| **Deposit integration** | Your frontend | A few lines of code using the `@swype-org/deposit` SDK (vanilla JS or React) to trigger the payment flow. |
 
 Blink handles everything else: user authentication, wallet connection, on-chain transfers, and cross-chain bridging.
 
@@ -47,7 +47,7 @@ Blink handles everything else: user authentication, wallet connection, on-chain 
 | **Signature** | An ECDSA P-256 SHA-256 signature over the payload string, base64url-encoded. Blink verifies this against your registered public key. |
 | **Idempotency Key** | A UUID v4 generated per payment request. Prevents duplicate transfers if the same request is submitted twice. |
 | **Hosted Flow** | Blink's payment UI that opens in a modal iframe. It handles user authentication, wallet connection, and the actual transfer. |
-| **Transfer SDK** | The client-side library (`@swype-org/transfer`) that orchestrates the signer call and hosted flow lifecycle. |
+| **Deposit SDK** | The client-side library (`@swype-org/deposit`) that orchestrates the signer call and hosted flow lifecycle. |
 
 ## Next steps
 
