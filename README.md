@@ -12,12 +12,12 @@ integration/                     # Step-by-step integration guide
   key-generation.mdx             # Generate ECDSA P-256 key pair
   merchant-registration.mdx      # Register with Blink
   signer-endpoint.mdx            # Build the signer endpoint (Node.js + Python)
-  checkout-sdk.mdx               # Integrate the Checkout SDK
+  checkout-sdk.mdx               # Integrate the Transfer SDK
   testing.mdx                    # Testing and staging setup
   production-checklist.mdx       # Go-live checklist
-sdk-reference/                   # Checkout SDK API reference
-  checkout-class.mdx             # Checkout class API
-  react-hook.mdx                 # useBlinkCheckout hook API
+sdk-reference/                   # Transfer SDK API reference
+  checkout-class.mdx             # Transfer class API
+  react-hook.mdx                 # useBlinkTransfer hook API
   types.mdx                      # TypeScript types reference
   errors.mdx                     # Error codes and getDisplayMessage
   events.mdx                     # Events, status transitions, lifecycle

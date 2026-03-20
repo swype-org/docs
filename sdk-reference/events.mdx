@@ -3,7 +3,7 @@ title: Events and Lifecycle
 description: Event system, status transitions, and instance lifecycle management.
 ---
 
-The `Checkout` class emits events during the payment flow. Use `on()` and `off()` to subscribe and unsubscribe.
+The `Transfer` class emits events during the payment flow. Use `on()` and `off()` to subscribe and unsubscribe.
 
 ## Events
 
@@ -12,7 +12,7 @@ The `Checkout` class emits events during the payment flow. Use `on()` and `off()
 Fired when the payment completes successfully. The handler receives a `DepositResult`.
 
 ```typescript
-checkout.on('complete', (result: DepositResult) => {
+transfer.on('complete', (result: DepositResult) => {
   console.log('Transfer ID:', result.transfer.id);
   console.log('Status:', result.transfer.status);
 });
@@ -20,30 +20,30 @@ checkout.on('complete', (result: DepositResult) => {
 
 ### error
 
-Fired when the payment flow fails. The handler receives a `CheckoutError`.
+Fired when the payment flow fails. The handler receives a `TransferError`.
 
 ```typescript
-checkout.on('error', (error: CheckoutError) => {
-  console.error('Checkout failed:', error.code, error.message);
+transfer.on('error', (error: TransferError) => {
+  console.error('Transfer failed:', error.code, error.message);
 });
 ```
 
 ### close
 
-Fired when the checkout iframe is dismissed (user tapped backdrop, pressed Escape, or the flow was closed programmatically).
+Fired when the transfer iframe is dismissed (user tapped backdrop, pressed Escape, or the flow was closed programmatically).
 
 ```typescript
-checkout.on('close', () => {
-  console.log('Checkout closed');
+transfer.on('close', () => {
+  console.log('Transfer closed');
 });
 ```
 
 ### status-change
 
-Fired on every status transition. The handler receives the new `CheckoutStatus`.
+Fired on every status transition. The handler receives the new `TransferStatus`.
 
 ```typescript
-checkout.on('status-change', (status: CheckoutStatus) => {
+transfer.on('status-change', (status: TransferStatus) => {
   console.log('Status:', status);
 });
 ```
@@ -80,16 +80,16 @@ const onComplete = (result: DepositResult) => {
 };
 
 // Subscribe
-checkout.on('complete', onComplete);
+transfer.on('complete', onComplete);
 
 // Unsubscribe
-checkout.off('complete', onComplete);
+transfer.off('complete', onComplete);
 ```
 
 Both `on()` and `off()` return `this` for chaining:
 
 ```typescript
-checkout
+transfer
   .on('complete', handleComplete)
   .on('error', handleError)
   .on('close', handleClose);
@@ -99,10 +99,10 @@ checkout
 
 ### close()
 
-Closes the checkout iframe and resets status to `idle`. Fires the `close` event. Does not destroy the instance — you can call `requestDeposit()` again.
+Closes the transfer iframe and resets status to `idle`. Fires the `close` event. Does not destroy the instance — you can call `requestDeposit()` again.
 
 ```typescript
-checkout.close();
+transfer.close();
 ```
 
 ### destroy()
@@ -113,18 +113,18 @@ Call this when the component unmounts or the page unloads.
 
 ```typescript
 // Vanilla JS — on page unload
-window.addEventListener('beforeunload', () => checkout.destroy());
+window.addEventListener('beforeunload', () => transfer.destroy());
 
-// React — handled automatically by useBlinkCheckout
+// React — handled automatically by useBlinkTransfer
 ```
 
 <Warning>
-Always call `destroy()` when the checkout is no longer needed to prevent memory leaks from lingering event listeners.
+Always call `destroy()` when the transfer is no longer needed to prevent memory leaks from lingering event listeners.
 </Warning>
 
 ## React lifecycle
 
-The `useBlinkCheckout` hook manages the `Checkout` instance lifecycle automatically:
+The `useBlinkTransfer` hook manages the `Transfer` instance lifecycle automatically:
 
 - Creates the instance on first render.
 - Subscribes to `status-change`, `complete`, and `error` events.

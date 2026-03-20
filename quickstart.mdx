@@ -1,9 +1,9 @@
 ---
 title: Quickstart
-description: Get a working Blink checkout integration in 5 minutes.
+description: Get a working Blink transfer integration in 5 minutes.
 ---
 
-This guide gets you from zero to a working payment flow. You will install the SDK, set up a minimal signer endpoint, and trigger your first checkout.
+This guide gets you from zero to a working payment flow. You will install the SDK, set up a minimal signer endpoint, and trigger your first transfer.
 
 ## Prerequisites
 
@@ -15,15 +15,15 @@ This guide gets you from zero to a working payment flow. You will install the SD
 <CodeGroup>
 
 ```bash npm
-npm install @swype-org/checkout
+npm install @swype-org/transfer
 ```
 
 ```bash yarn
-yarn add @swype-org/checkout
+yarn add @swype-org/transfer
 ```
 
 ```bash pnpm
-pnpm add @swype-org/checkout
+pnpm add @swype-org/transfer
 ```
 
 </CodeGroup>
@@ -82,28 +82,28 @@ export MERCHANT_PRIVATE_KEY="$(cat private.pem)"
 
 See [Build Your Signer Endpoint](/integration/signer-endpoint) for the full implementation with validation, security, and a Python equivalent.
 
-## 3. Trigger the checkout
+## 3. Trigger the transfer
 
 ### Vanilla JavaScript
 
 ```typescript
-import { Checkout, CheckoutError, getDisplayMessage } from '@swype-org/checkout';
+import { Transfer, TransferError, getDisplayMessage } from '@swype-org/transfer';
 
-const checkout = new Checkout({
+const transfer = new Transfer({
   signer: '/api/sign-payment',
 });
 
-document.getElementById('deposit-btn').addEventListener('click', async () => {
+document.getElementById('transfer-btn').addEventListener('click', async () => {
   try {
-    const { transfer } = await checkout.requestDeposit({
+    const { transfer: result } = await transfer.requestDeposit({
       amount: 50,
       chainId: 8453,
       address: '0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a',
       token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
     });
-    console.log('Transfer complete:', transfer.id, transfer.status);
+    console.log('Transfer complete:', result.id, result.status);
   } catch (error) {
-    if (error instanceof CheckoutError) {
+    if (error instanceof TransferError) {
       alert(getDisplayMessage(error));
     }
   }
@@ -113,14 +113,14 @@ document.getElementById('deposit-btn').addEventListener('click', async () => {
 ### React
 
 ```tsx
-import { useBlinkCheckout } from '@swype-org/checkout/react';
+import { useBlinkTransfer } from '@swype-org/transfer/react';
 
-function DepositButton() {
-  const { status, result, error, displayMessage, requestDeposit } = useBlinkCheckout({
+function TransferButton() {
+  const { status, result, error, displayMessage, requestDeposit } = useBlinkTransfer({
     signer: '/api/sign-payment',
   });
 
-  const handleDeposit = () => {
+  const handleTransfer = () => {
     requestDeposit({
       amount: 50,
       chainId: 8453,
@@ -131,7 +131,7 @@ function DepositButton() {
 
   return (
     <>
-      <button onClick={handleDeposit} disabled={status === 'signer-loading'}>
+      <button onClick={handleTransfer} disabled={status === 'signer-loading'}>
         {status === 'signer-loading' ? 'Preparing...' : 'Deposit $50'}
       </button>
       {error && <p className="error">{displayMessage}</p>}
@@ -143,7 +143,7 @@ function DepositButton() {
 
 ## What's next
 
-You now have a working checkout flow. To go to production:
+You now have a working transfer flow. To go to production:
 
 <Steps>
   <Step title="Generate a production key pair">
@@ -156,7 +156,7 @@ You now have a working checkout flow. To go to production:
     [Signer Endpoint](/integration/signer-endpoint) — add request validation, authentication, rate limiting, and CORS.
   </Step>
   <Step title="Handle errors gracefully">
-    [Error Handling](/sdk-reference/errors) — use `CheckoutError` codes and `getDisplayMessage()` in your UI.
+    [Error Handling](/sdk-reference/errors) — use `TransferError` codes and `getDisplayMessage()` in your UI.
   </Step>
   <Step title="Run the production checklist">
     [Production Checklist](/integration/production-checklist) — verify every item before going live.

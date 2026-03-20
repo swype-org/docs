@@ -1,24 +1,24 @@
 ---
-title: Integrate the Checkout SDK
-description: Install and configure the Checkout SDK to trigger payment flows from your frontend.
+title: Integrate the Transfer SDK
+description: Install and configure the Transfer SDK to trigger payment flows from your frontend.
 ---
 
-The Checkout SDK (`@swype-org/checkout`) opens Blink's hosted payment flow in a modal iframe overlay. On mobile viewports (480px or narrower), the iframe renders full-screen for an app-like experience. The SDK handles the signer call, iframe lifecycle, passkey/WebAuthn delegation, and completion detection via `postMessage`.
+The Transfer SDK (`@swype-org/transfer`) opens Blink's hosted payment flow in a modal iframe overlay. On mobile viewports (480px or narrower), the iframe renders full-screen for an app-like experience. The SDK handles the signer call, iframe lifecycle, passkey/WebAuthn delegation, and completion detection via `postMessage`.
 
 ## Install
 
 <CodeGroup>
 
 ```bash npm
-npm install @swype-org/checkout
+npm install @swype-org/transfer
 ```
 
 ```bash yarn
-yarn add @swype-org/checkout
+yarn add @swype-org/transfer
 ```
 
 ```bash pnpm
-pnpm add @swype-org/checkout
+pnpm add @swype-org/transfer
 ```
 
 </CodeGroup>
@@ -26,23 +26,23 @@ pnpm add @swype-org/checkout
 ## Vanilla JavaScript
 
 ```typescript
-import { Checkout, CheckoutError, getDisplayMessage } from '@swype-org/checkout';
+import { Transfer, TransferError, getDisplayMessage } from '@swype-org/transfer';
 
-const checkout = new Checkout({
+const transfer = new Transfer({
   signer: '/api/sign-payment',
 });
 
-document.getElementById('deposit-btn')!.addEventListener('click', async () => {
+document.getElementById('transfer-btn')!.addEventListener('click', async () => {
   try {
-    const { transfer } = await checkout.requestDeposit({
+    const { transfer: result } = await transfer.requestDeposit({
       amount: 50,
       chainId: 8453,
       address: '0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a',
       token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
     });
-    console.log('Transfer complete:', transfer.id, transfer.status);
+    console.log('Transfer complete:', result.id, result.status);
   } catch (error) {
-    if (error instanceof CheckoutError) {
+    if (error instanceof TransferError) {
       showErrorToUser(getDisplayMessage(error));
     }
   }
@@ -52,14 +52,14 @@ document.getElementById('deposit-btn')!.addEventListener('click', async () => {
 ## React hook
 
 ```tsx
-import { useBlinkCheckout } from '@swype-org/checkout/react';
+import { useBlinkTransfer } from '@swype-org/transfer/react';
 
-function DepositButton() {
-  const { status, result, error, displayMessage, requestDeposit } = useBlinkCheckout({
+function TransferButton() {
+  const { status, result, error, displayMessage, requestDeposit } = useBlinkTransfer({
     signer: '/api/sign-payment',
   });
 
-  const handleDeposit = () => {
+  const handleTransfer = () => {
     requestDeposit({
       amount: 50,
       chainId: 8453,
@@ -70,7 +70,7 @@ function DepositButton() {
 
   return (
     <>
-      <button onClick={handleDeposit} disabled={status === 'signer-loading'}>
+      <button onClick={handleTransfer} disabled={status === 'signer-loading'}>
         {status === 'signer-loading' ? 'Preparing...' : 'Deposit $50'}
       </button>
       {error && <p className="error">{displayMessage}</p>}
@@ -80,12 +80,12 @@ function DepositButton() {
 }
 ```
 
-The hook returns reactive `status`, `result`, `error`, `displayMessage`, and `isActive` values, plus `requestDeposit`, `focus`, and `close` actions. It manages the `Checkout` lifecycle and cleans up on unmount.
+The hook returns reactive `status`, `result`, `error`, `displayMessage`, and `isActive` values, plus `requestDeposit`, `focus`, and `close` actions. It manages the `Transfer` lifecycle and cleans up on unmount.
 
 ## Configuration
 
 ```typescript
-const checkout = new Checkout({
+const transfer = new Transfer({
   // Required: URL string or custom async function
   signer: '/api/sign-payment',
 
@@ -97,7 +97,7 @@ const checkout = new Checkout({
   hostedFlowOrigin: 'https://pay.tryblink.xyz',
 
   // DOM element to mount the iframe overlay into. Default: document.body
-  containerElement: document.getElementById('checkout-root')!,
+  containerElement: document.getElementById('transfer-root')!,
 
   // Max ms to wait for signer response. Default: 15000
   signerTimeoutMs: 15_000,
@@ -115,9 +115,9 @@ const checkout = new Checkout({
 If you need full control over the HTTP call to your signer (custom headers, auth tokens, different HTTP method), pass a function instead of a URL:
 
 ```typescript
-import type { SignerFunction } from '@swype-org/checkout';
+import type { SignerFunction } from '@swype-org/transfer';
 
-const checkout = new Checkout({
+const transfer = new Transfer({
   signer: async (data) => {
     const res = await fetch('/api/sign-payment', {
       method: 'POST',
@@ -188,25 +188,25 @@ interface TransferSummary {
 | `error` | Something failed. |
 
 ```typescript
-checkout.on('status-change', (status) => console.log('Status:', status));
+transfer.on('status-change', (status) => console.log('Status:', status));
 
-checkout.status;    // current status
-checkout.result;    // last DepositResult (when completed)
-checkout.error;     // last CheckoutError (when error)
-checkout.isActive;  // true during signer-loading or iframe-active
+transfer.status;    // current status
+transfer.result;    // last DepositResult (when completed)
+transfer.error;     // last TransferError (when error)
+transfer.isActive;  // true during signer-loading or iframe-active
 ```
 
 ## Error handling
 
-See [Error Codes](/sdk-reference/errors) for the full reference. Every error is a `CheckoutError` with a machine-readable `code`:
+See [Error Codes](/sdk-reference/errors) for the full reference. Every error is a `TransferError` with a machine-readable `code`:
 
 ```typescript
-import { CheckoutError, getDisplayMessage } from '@swype-org/checkout';
+import { TransferError, getDisplayMessage } from '@swype-org/transfer';
 
 try {
-  await checkout.requestDeposit({ /* ... */ });
+  await transfer.requestDeposit({ /* ... */ });
 } catch (err) {
-  if (err instanceof CheckoutError) {
+  if (err instanceof TransferError) {
     showToast(getDisplayMessage(err));
     console.error(err.code, err.message);
   }
@@ -216,11 +216,11 @@ try {
 ## Lifecycle
 
 ```typescript
-// Close the checkout iframe without waiting for completion
-checkout.close();
+// Close the transfer iframe without waiting for completion
+transfer.close();
 
 // Tear down and release all resources (call on unmount / page unload)
-checkout.destroy();
+transfer.destroy();
 ```
 
 ## Metadata and order reference
@@ -228,7 +228,7 @@ checkout.destroy();
 Pass merchant-specific data through the flow for reconciliation:
 
 ```typescript
-await checkout.requestDeposit({
+await transfer.requestDeposit({
   amount: 50,
   chainId: 8453,
   address: '0x...',
@@ -242,7 +242,7 @@ The `reference` and `metadata` are forwarded to your signer endpoint so you can 
 
 ## Mobile browser considerations
 
-- **Full-screen iframe:** On viewports 480px or narrower, the checkout iframe automatically renders full-screen with no border radius.
+- **Full-screen iframe:** On viewports 480px or narrower, the transfer iframe automatically renders full-screen with no border radius.
 - **Passkey / WebAuthn:** The SDK transparently handles WebAuthn ceremonies between the cross-origin iframe and the parent page. No additional configuration is needed.
 - **`callbackScheme`:** Always pass `null` (or omit) for browser integrations. Reserved for native app deep-link flows.
 - **Viewport meta tag:** Ensure your page includes a proper viewport meta tag:

@@ -7,7 +7,7 @@ description: Verify your Blink integration with the sample app and staging envir
 
 The `sample-app/` directory in the Blink repository contains a working end-to-end integration. It demonstrates:
 
-- Checkout SDK initialization and `requestDeposit()` call (see `src/PaymentPage.tsx`)
+- Transfer SDK initialization and `requestDeposit()` call (see `src/PaymentPage.tsx`)
 - A local dev signer endpoint via Vite middleware (see `vite.config.ts`)
 - Environment configuration (see `env.example`)
 
@@ -36,7 +36,7 @@ Follow this sequence to verify your integration:
   <Step title="Configure your signer">
     Set the private key and merchant ID on your signer endpoint.
   </Step>
-  <Step title="Launch the checkout flow">
+  <Step title="Launch the transfer flow">
     Call `requestDeposit()` from your app.
   </Step>
   <Step title="Complete a test payment">
@@ -53,11 +53,11 @@ For staging and shared environments:
 
 - Deploy your signer as a server endpoint or serverless function (e.g., AWS Lambda).
 - Store the private key in a secrets manager (e.g., AWS Secrets Manager).
-- Point the Checkout SDK's `signer` config at your deployed signer URL.
+- Point the Transfer SDK's `signer` config at your deployed signer URL.
 - Set `webviewBaseUrl` to the Blink staging URL: `https://pay-staging.tryblink.xyz`.
 
 ```typescript
-const checkout = new Checkout({
+const transfer = new Transfer({
   signer: 'https://your-staging-api.example.com/api/sign-payment',
   webviewBaseUrl: 'https://pay-staging.tryblink.xyz',
 });
@@ -68,10 +68,10 @@ const checkout = new Checkout({
 Enable debug logging to trace the full SDK lifecycle during development:
 
 ```typescript
-const checkout = new Checkout({
+const transfer = new Transfer({
   signer: '/api/sign-payment',
   debug: true,
 });
 ```
 
-This logs signer calls, iframe state transitions, postMessage events, and errors to `console.debug` with the `[BlinkCheckout]` prefix.
+This logs signer calls, iframe state transitions, postMessage events, and errors to `console.debug` with the `[BlinkTransfer]` prefix.

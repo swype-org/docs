@@ -12,7 +12,7 @@ sequenceDiagram
     participant User
     participant MerchantApp as Merchant App
     participant Signer as Merchant Signer (your server)
-    participant SDK as Checkout SDK
+    participant SDK as Transfer SDK
     participant HostedFlow as Hosted Flow (Blink)
     participant BlinkAPI as Blink API
 
@@ -37,27 +37,27 @@ sequenceDiagram
 
 | Component | Runs on | Responsibility |
 |-----------|---------|----------------|
-| **Merchant App** | Browser | Your frontend. Calls `requestDeposit()` on the Checkout SDK when the user wants to pay. |
+| **Merchant App** | Browser | Your frontend. Calls `requestDeposit()` on the Transfer SDK when the user wants to pay. |
 | **Merchant Signer** | Your server | Validates payment requests, generates an idempotency key, builds a JSON payload, signs it with your ECDSA P-256 private key, and returns the signed response. |
 
 ### Blink side
 
 | Component | Runs on | Responsibility |
 |-----------|---------|----------------|
-| **Checkout SDK** | Browser (in your app) | Orchestrates the signer call, opens the iframe, and listens for the completion `postMessage`. Published as `@swype-org/checkout`. |
+| **Transfer SDK** | Browser (in your app) | Orchestrates the signer call, opens the iframe, and listens for the completion `postMessage`. Published as `@swype-org/transfer`. |
 | **Hosted Flow** | Browser (iframe) | Blink's payment UI. Verifies the merchant signature, authenticates the user, handles wallet connection, and executes the on-chain transfer. |
 | **Blink API** | Server | Stores merchant public keys, creates transfers, manages wallets and accounts. |
 
 ## Security model
 
-1. **Private key stays on your server.** The Checkout SDK never sees your private key. It only receives the signed payload from your signer endpoint.
+1. **Private key stays on your server.** The Transfer SDK never sees your private key. It only receives the signed payload from your signer endpoint.
 2. **Blink verifies every payment.** The hosted flow fetches your registered public key and verifies the ECDSA signature before showing any payment UI. A forged or tampered payload is rejected.
 3. **Idempotency keys prevent duplicates.** Each signer response includes a unique UUID. If the same idempotency key is submitted twice, the second transfer is rejected.
 4. **Short-lived links.** The signed payload includes a `signatureTimestamp`. Blink enforces a maximum signature age of 15 minutes server-side — expired links are rejected automatically.
 
 ## Iframe lifecycle
 
-On desktop viewports (wider than 480px), the checkout renders as a centered modal (460px wide, 680px tall) with a backdrop blur overlay. On mobile viewports (480px or narrower), it renders full-screen for an app-like experience.
+On desktop viewports (wider than 480px), the transfer renders as a centered modal (460px wide, 680px tall) with a backdrop blur overlay. On mobile viewports (480px or narrower), it renders full-screen for an app-like experience.
 
 The iframe has WebAuthn permissions (`publickey-credentials-get` and `publickey-credentials-create`) so passkey ceremonies work cross-origin. The user only leaves your page to create a passkey when the browser blocks cross-origin iFrame passkey creation and to connect their mobile wallet.
 

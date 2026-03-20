@@ -1,23 +1,23 @@
 ---
-title: Checkout Class
-description: API reference for the Checkout class — the core SDK entry point.
+title: Transfer Class
+description: API reference for the Transfer class — the core SDK entry point.
 ---
 
-The `Checkout` class is the main entry point for the SDK. It manages the signer call, iframe lifecycle, and completion handling.
+The `Transfer` class is the main entry point for the SDK. It manages the signer call, iframe lifecycle, and completion handling.
 
 ```typescript
-import { Checkout } from '@swype-org/checkout';
+import { Transfer } from '@swype-org/transfer';
 ```
 
 ## Constructor
 
 ```typescript
-new Checkout(config: CheckoutConfig)
+new Transfer(config: TransferConfig)
 ```
 
-Creates a new `Checkout` instance. Throws a `CheckoutError` with code `INVALID_REQUEST` if `config.signer` is missing or not a string/function.
+Creates a new `Transfer` instance. Throws a `TransferError` with code `INVALID_REQUEST` if `config.signer` is missing or not a string/function.
 
-### CheckoutConfig
+### TransferConfig
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
@@ -27,28 +27,28 @@ Creates a new `Checkout` instance. Throws a `CheckoutError` with code `INVALID_R
 | `containerElement` | `HTMLElement` | `document.body` | DOM element to mount the iframe overlay into. |
 | `signerTimeoutMs` | `number` | `15000` | Maximum milliseconds to wait for the signer to respond. |
 | `flowTimeoutMs` | `number` | `undefined` (no limit) | Maximum milliseconds for the entire flow (signer + user completion). |
-| `debug` | `boolean` | `false` | Log lifecycle events to `console.debug` with the `[BlinkCheckout]` prefix. |
+| `debug` | `boolean` | `false` | Log lifecycle events to `console.debug` with the `[BlinkTransfer]` prefix. |
 
 ## Methods
 
 ### requestDeposit
 
 ```typescript
-checkout.requestDeposit(request: DepositRequest): Promise<DepositResult>
+transfer.requestDeposit(request: DepositRequest): Promise<DepositResult>
 ```
 
-Opens the hosted payment flow for the given deposit. The returned Promise resolves when the user completes the payment and rejects with a `CheckoutError` on failure.
+Opens the hosted payment flow for the given deposit. The returned Promise resolves when the user completes the payment and rejects with a `TransferError` on failure.
 
 If a flow is already active, calling `requestDeposit` again cancels the previous flow and starts a new one.
 
-Throws `CheckoutError` with code `INVALID_REQUEST` if the instance has been destroyed.
+Throws `TransferError` with code `INVALID_REQUEST` if the instance has been destroyed.
 
 See [Types](/sdk-reference/types) for `DepositRequest` and `DepositResult` definitions.
 
 ### on
 
 ```typescript
-checkout.on(event: EventName, handler: EventHandler): this
+transfer.on(event: EventName, handler: EventHandler): this
 ```
 
 Register an event listener. Returns `this` for chaining. See [Events](/sdk-reference/events).
@@ -56,7 +56,7 @@ Register an event listener. Returns `this` for chaining. See [Events](/sdk-refer
 ### off
 
 ```typescript
-checkout.off(event: EventName, handler: EventHandler): this
+transfer.off(event: EventName, handler: EventHandler): this
 ```
 
 Remove a previously registered event listener. Returns `this` for chaining.
@@ -64,15 +64,15 @@ Remove a previously registered event listener. Returns `this` for chaining.
 ### close
 
 ```typescript
-checkout.close(): void
+transfer.close(): void
 ```
 
-Close the checkout iframe without waiting for completion. Resets status to `idle` and fires the `close` event.
+Close the transfer iframe without waiting for completion. Resets status to `idle` and fires the `close` event.
 
 ### destroy
 
 ```typescript
-checkout.destroy(): void
+transfer.destroy(): void
 ```
 
 Tear down the instance and release all resources. Closes the iframe, removes all event listeners, and marks the instance as destroyed. Subsequent calls to `requestDeposit` will reject with `INVALID_REQUEST`.
@@ -82,7 +82,7 @@ Call this on component unmount or page unload.
 ### focus
 
 ```typescript
-checkout.focus(): void
+transfer.focus(): void
 ```
 
 No-op. Retained for API compatibility.
@@ -92,15 +92,15 @@ No-op. Retained for API compatibility.
 ### status
 
 ```typescript
-checkout.status: CheckoutStatus
+transfer.status: TransferStatus
 ```
 
-Current phase of the checkout flow. One of `'idle'`, `'signer-loading'`, `'iframe-active'`, `'completed'`, or `'error'`.
+Current phase of the transfer flow. One of `'idle'`, `'signer-loading'`, `'iframe-active'`, `'completed'`, or `'error'`.
 
 ### result
 
 ```typescript
-checkout.result: DepositResult | null
+transfer.result: DepositResult | null
 ```
 
 Last successful `DepositResult`, available when `status === 'completed'`.
@@ -108,15 +108,15 @@ Last successful `DepositResult`, available when `status === 'completed'`.
 ### error
 
 ```typescript
-checkout.error: CheckoutError | null
+transfer.error: TransferError | null
 ```
 
-Last `CheckoutError`, available when `status === 'error'`.
+Last `TransferError`, available when `status === 'error'`.
 
 ### isActive
 
 ```typescript
-checkout.isActive: boolean
+transfer.isActive: boolean
 ```
 
-`true` when a deposit flow is in progress (`status` is `'signer-loading'` or `'iframe-active'`).
+`true` when a transfer flow is in progress (`status` is `'signer-loading'` or `'iframe-active'`).
