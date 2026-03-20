@@ -12,7 +12,7 @@ integration/                     # Step-by-step integration guide
   key-generation.mdx             # Generate ECDSA P-256 key pair
   merchant-registration.mdx      # Register with Blink
   signer-endpoint.mdx            # Build the signer endpoint (Node.js + Python)
-  checkout-sdk.mdx               # Integrate the Transfer SDK
+  transfer-sdk.mdx               # Integrate the Transfer SDK
   testing.mdx                    # Testing and staging setup
   production-checklist.mdx       # Go-live checklist
 sdk-reference/                   # Transfer SDK API reference

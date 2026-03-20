@@ -28,7 +28,7 @@
               "integration/key-generation",
               "integration/merchant-registration",
               "integration/signer-endpoint",
-              "integration/checkout-sdk",
+              "integration/transfer-sdk",
               "integration/testing",
               "integration/production-checklist"
             ]
