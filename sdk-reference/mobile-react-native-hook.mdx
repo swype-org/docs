@@ -1,0 +1,102 @@
+---
+title: React Native Hook
+description: API reference for the useBlinkMobileDeposit hook — reactive state management for React Native.
+---
+
+The `useBlinkMobileDeposit` hook wraps `MobileDeposit` with reactive React state. It manages the instance lifecycle and cleans up on unmount.
+
+```typescript
+import { useBlinkMobileDeposit } from '@swype-org/deposit-mobile/react-native';
+```
+
+## Usage
+
+```tsx
+import { useBlinkMobileDeposit } from '@swype-org/deposit-mobile/react-native';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
+
+function DepositButton() {
+  const { status, result, error, displayMessage, requestDeposit, handleDeepLink } =
+    useBlinkMobileDeposit({
+      signer: 'https://api.merchant.com/sign-payment',
+      callbackScheme: 'myapp',
+      openUrl: (url) => WebBrowser.openBrowserAsync(url).then(() => {}),
+    });
+
+  useEffect(() => {
+    const sub = Linking.addEventListener('url', ({ url }) => handleDeepLink(url));
+    return () => sub.remove();
+  }, [handleDeepLink]);
+
+  return (
+    <>
+      <Button
+        title={status === 'signer-loading' ? 'Preparing...' : 'Deposit $50'}
+        disabled={status === 'signer-loading'}
+        onPress={() =>
+          requestDeposit({
+            amount: 50,
+            chainId: 8453,
+            address: '0x...',
+            token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          })
+        }
+      />
+      {error && <Text>{displayMessage}</Text>}
+      {result && <Text>Transfer {result.transfer.id} complete!</Text>}
+    </>
+  );
+}
+```
+
+## Parameters
+
+The hook accepts a single `MobileDepositConfig` object. See [MobileDeposit Class](/sdk-reference/mobile-deposit-class) for the full config reference.
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `signer` | `string \| SignerFunction` | Yes | Signer endpoint URL or custom async function. |
+| `callbackScheme` | `string` | Yes | Custom URL scheme for deep link callbacks. |
+| `openUrl` | `(url: string) => Promise<void>` | Yes | Function to open a URL in an in-app browser. |
+| `webviewBaseUrl` | `string` | No | Base URL of the hosted payment app. |
+| `callbackPath` | `string` | No | Path for the callback deep link. |
+| `signerTimeoutMs` | `number` | No | Max ms to wait for signer response. |
+| `flowTimeoutMs` | `number` | No | Max ms for entire flow. |
+| `debug` | `boolean` | No | Enable debug logging. |
+
+## Return value
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `status` | `MobileDepositStatus` | Current flow phase: `'idle'`, `'signer-loading'`, `'browser-active'`, `'completed'`, or `'error'`. |
+| `result` | `DepositResult \| null` | Last successful result, or `null`. |
+| `error` | `DepositError \| null` | Last error, or `null`. |
+| `displayMessage` | `string \| null` | User-friendly error message from `getDisplayMessage(error)`, or `null`. |
+| `isActive` | `boolean` | `true` during `signer-loading` or `browser-active`. |
+| `requestDeposit` | `(request: DepositRequest) => Promise<DepositResult>` | Start a deposit flow. |
+| `handleDeepLink` | `(url: string) => boolean` | Pass an incoming deep link URL to the SDK. Returns `true` if handled. |
+| `close` | `() => void` | Cancel the current flow and reset to idle. |
+
+## Deep link setup
+
+The hook does not set up deep link listeners — this keeps it platform-agnostic. Use `handleDeepLink` in your app's deep link handler:
+
+```tsx
+useEffect(() => {
+  const sub = Linking.addEventListener('url', ({ url }) => handleDeepLink(url));
+  return () => sub.remove();
+}, [handleDeepLink]);
+```
+
+## Error handling
+
+The hook provides `displayMessage` as a convenience for showing user-friendly error text:
+
+```tsx
+const { error, displayMessage } = useBlinkMobileDeposit({ /* config */ });
+
+{error && <Text style={styles.error}>{displayMessage}</Text>}
+```
+
+See [Mobile Error Codes](/sdk-reference/mobile-errors) for the full reference.

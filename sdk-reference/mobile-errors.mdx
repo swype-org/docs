@@ -1,0 +1,120 @@
+---
+title: Mobile Error Codes
+description: Error codes, DepositError class, and user-friendly error messages for the mobile SDK.
+---
+
+Every error thrown by the Mobile Deposit SDK is a `DepositError` instance with a machine-readable `code` property. The error class is the same as the web SDK, but the mobile SDK has additional error codes for browser and deep link failures.
+
+## DepositError
+
+```typescript
+import { DepositError, getDisplayMessage } from '@swype-org/deposit-mobile';
+```
+
+```typescript
+class DepositError extends Error {
+  readonly code: DepositMobileErrorCode;
+  constructor(code: DepositMobileErrorCode, message: string);
+}
+```
+
+## Error codes
+
+### Mobile-specific codes
+
+| Code | Meaning | User-facing message |
+|------|---------|---------------------|
+| `BROWSER_FAILED` | Failed to open the in-app browser (e.g. `openUrl` threw an error). | "Unable to open the payment browser. Please try again." |
+| `BROWSER_DISMISSED` | User dismissed the in-app browser before completing the payment. | "The payment browser was closed before the transfer completed." |
+| `DEEP_LINK_INVALID` | The callback deep link was malformed or missing required parameters. | "The payment callback was malformed. Please try again." |
+
+### Shared codes (same as web SDK)
+
+| Code | Meaning | User-facing message |
+|------|---------|---------------------|
+| `SIGNER_REQUEST_FAILED` | Signer returned a non-2xx response. | "Unable to start the payment. Please try again." |
+| `SIGNER_NETWORK_ERROR` | Network failure reaching the signer. | "Unable to reach the payment server. Check your connection and try again." |
+| `SIGNER_RESPONSE_INVALID` | Signer response missing required fields (`merchantId`, `payload`, `signature`, `preview`). | "The payment server returned an unexpected response." |
+| `SIGNER_TIMEOUT` | Signer did not respond within `signerTimeoutMs`. | "The payment server took too long to respond. Please try again." |
+| `FLOW_TIMEOUT` | Entire flow exceeded `flowTimeoutMs`. | "The payment flow timed out. Please try again." |
+| `INVALID_REQUEST` | Bad input (missing amount, invalid address, destroyed instance, etc.). | "Invalid payment request. Please check your input." |
+
+## getDisplayMessage
+
+Returns a user-friendly display string for a `DepositError`. You can show this directly in your UI.
+
+```typescript
+function getDisplayMessage(error: DepositError): string
+```
+
+### Usage
+
+```typescript
+import { DepositError, getDisplayMessage } from '@swype-org/deposit-mobile';
+
+try {
+  await deposit.requestDeposit({ /* ... */ });
+} catch (err) {
+  if (err instanceof DepositError) {
+    Alert.alert('Payment Error', getDisplayMessage(err));
+    console.error(err.code, err.message);
+  }
+}
+```
+
+## Handling specific error codes
+
+```typescript
+try {
+  await deposit.requestDeposit({ /* ... */ });
+} catch (err) {
+  if (!(err instanceof DepositError)) throw err;
+
+  switch (err.code) {
+    case 'BROWSER_DISMISSED':
+      // User intentionally closed — no action needed
+      break;
+    case 'BROWSER_FAILED':
+      // Could not open browser — prompt retry or show fallback
+      showRetryDialog(getDisplayMessage(err));
+      break;
+    case 'DEEP_LINK_INVALID':
+      // Malformed callback — log for investigation
+      reportError(err);
+      break;
+    case 'SIGNER_REQUEST_FAILED':
+    case 'SIGNER_NETWORK_ERROR':
+    case 'SIGNER_TIMEOUT':
+      // Signer issue — prompt retry
+      showRetryDialog(getDisplayMessage(err));
+      break;
+    case 'SIGNER_RESPONSE_INVALID':
+      // Integration bug — log for investigation
+      reportError(err);
+      break;
+    case 'FLOW_TIMEOUT':
+      showRetryDialog(getDisplayMessage(err));
+      break;
+    case 'INVALID_REQUEST':
+      showValidationError(getDisplayMessage(err));
+      break;
+  }
+}
+```
+
+## DepositMobileErrorCode
+
+The union of all mobile error code strings:
+
+```typescript
+type DepositMobileErrorCode =
+  | 'BROWSER_FAILED'
+  | 'BROWSER_DISMISSED'
+  | 'DEEP_LINK_INVALID'
+  | 'SIGNER_REQUEST_FAILED'
+  | 'SIGNER_NETWORK_ERROR'
+  | 'SIGNER_RESPONSE_INVALID'
+  | 'SIGNER_TIMEOUT'
+  | 'FLOW_TIMEOUT'
+  | 'INVALID_REQUEST';
+```

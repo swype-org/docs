@@ -29,6 +29,7 @@
               "integration/merchant-registration",
               "integration/signer-endpoint",
               "integration/deposit-sdk",
+              "integration/deposit-mobile-sdk",
               "integration/testing",
               "integration/production-checklist"
             ]
@@ -39,13 +40,21 @@
         "tab": "SDK Reference",
         "groups": [
           {
-            "group": "Deposit SDK",
+            "group": "Deposit SDK (Web)",
             "pages": [
-              "sdk-reference/checkout-class",
+              "sdk-reference/deposit-class",
               "sdk-reference/react-hook",
               "sdk-reference/types",
               "sdk-reference/errors",
               "sdk-reference/events"
+            ]
+          },
+          {
+            "group": "Deposit SDK (Mobile)",
+            "pages": [
+              "sdk-reference/mobile-deposit-class",
+              "sdk-reference/mobile-react-native-hook",
+              "sdk-reference/mobile-errors"
             ]
           }
         ]

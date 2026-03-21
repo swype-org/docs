@@ -31,6 +31,8 @@ sequenceDiagram
     SDK->>MerchantApp: DepositResult
 ```
 
+The flow above shows the web integration. For **mobile apps**, the Mobile Deposit SDK (`@swype-org/deposit-mobile`) follows the same signed-link model but opens the hosted flow in an in-app browser instead of an iframe, and receives the result via a deep link callback instead of `postMessage`. See [Integrate the Mobile Deposit SDK](/integration/deposit-mobile-sdk) for details.
+
 ## Components
 
 ### Your side

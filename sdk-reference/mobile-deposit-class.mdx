@@ -1,0 +1,132 @@
+---
+title: MobileDeposit Class
+description: API reference for the MobileDeposit class — the core entry point for mobile SDK integrations.
+---
+
+The `MobileDeposit` class is the main entry point for the mobile SDK. It manages the signer call, in-app browser lifecycle, deep link handling, and completion detection.
+
+```typescript
+import { MobileDeposit } from '@swype-org/deposit-mobile';
+```
+
+## Constructor
+
+```typescript
+new MobileDeposit(config: MobileDepositConfig)
+```
+
+Creates a new `MobileDeposit` instance. Throws a `DepositError` with code `INVALID_REQUEST` if any required config field is missing or invalid.
+
+### MobileDepositConfig
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `signer` | `string \| SignerFunction` | **required** | URL string for the signer endpoint, or a custom async function. When a string, the SDK sends a `POST` with a JSON `SignerRequest` body. When a function, the SDK calls it with a `SignerRequest` and expects a `Promise<SignerResponse>`. |
+| `callbackScheme` | `string` | **required** | Custom URL scheme registered by the mobile app (e.g. `'myapp'`). The hosted flow redirects to `{callbackScheme}://swype/callback?...` on completion. |
+| `openUrl` | `(url: string) => Promise<void>` | **required** | Function that opens a URL in an in-app browser. Use `expo-web-browser`, `SFSafariViewController` (iOS), or `CustomTabsIntent` (Android). The returned promise should resolve when the browser is dismissed. |
+| `webviewBaseUrl` | `string` | `'https://pay-staging.tryblink.xyz'` | Base URL of the hosted payment webview app. |
+| `callbackPath` | `string` | `'/swype/callback'` | Path component of the callback deep link. |
+| `signerTimeoutMs` | `number` | `15000` | Maximum milliseconds to wait for the signer to respond. |
+| `flowTimeoutMs` | `number` | `undefined` (no limit) | Maximum milliseconds for the entire flow (signer + user completion). |
+| `debug` | `boolean` | `false` | Log lifecycle events to `console.debug` with the `[SwypeMobileDeposit]` prefix. |
+
+## Methods
+
+### requestDeposit
+
+```typescript
+deposit.requestDeposit(request: DepositRequest): Promise<DepositResult>
+```
+
+Opens the hosted payment flow in an in-app browser. The returned Promise resolves when the user completes the payment (via deep link callback) and rejects with a `DepositError` on failure.
+
+The merchant must listen for incoming deep links and pass them to `handleDeepLink()` for the promise to resolve.
+
+If a flow is already active, calling `requestDeposit` again cancels the previous flow and starts a new one.
+
+See [Types](/sdk-reference/types) for `DepositRequest` and `DepositResult` definitions.
+
+### handleDeepLink
+
+```typescript
+deposit.handleDeepLink(url: string): boolean
+```
+
+Feed an incoming deep link URL to the SDK. Returns `true` if the URL was a valid Blink callback and the SDK handled it, `false` if the URL did not match the expected callback pattern.
+
+Call this from your deep link listener (e.g. `Linking.addEventListener('url', ...)`).
+
+### on
+
+```typescript
+deposit.on(event: EventName, handler: EventHandler): this
+```
+
+Register an event listener. Returns `this` for chaining.
+
+| Event | Handler signature | When |
+|-------|-------------------|------|
+| `complete` | `(result: DepositResult) => void` | Payment completed successfully. |
+| `error` | `(error: DepositError) => void` | Payment failed. |
+| `dismiss` | `() => void` | In-app browser dismissed without completion. |
+| `status-change` | `(status: MobileDepositStatus) => void` | Status changed. |
+
+### off
+
+```typescript
+deposit.off(event: EventName, handler: EventHandler): this
+```
+
+Remove a previously registered event listener. Returns `this` for chaining.
+
+### close
+
+```typescript
+deposit.close(): void
+```
+
+Cancel the current flow. Rejects the pending promise with `BROWSER_DISMISSED` and resets status to `idle`.
+
+### destroy
+
+```typescript
+deposit.destroy(): void
+```
+
+Tear down the instance and release all resources. Clears all timers, removes all event listeners, and marks the instance as destroyed. Subsequent calls to `requestDeposit` will reject with `INVALID_REQUEST`.
+
+Call this on component unmount.
+
+## Properties
+
+### status
+
+```typescript
+deposit.status: MobileDepositStatus
+```
+
+Current phase of the deposit flow. One of `'idle'`, `'signer-loading'`, `'browser-active'`, `'completed'`, or `'error'`.
+
+### result
+
+```typescript
+deposit.result: DepositResult | null
+```
+
+Last successful `DepositResult`, available when `status === 'completed'`.
+
+### error
+
+```typescript
+deposit.error: DepositError | null
+```
+
+Last `DepositError`, available when `status === 'error'`.
+
+### isActive
+
+```typescript
+deposit.isActive: boolean
+```
+
+`true` when a deposit flow is in progress (`status` is `'signer-loading'` or `'browser-active'`).

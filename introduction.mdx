@@ -5,6 +5,8 @@ description: Accept payments with Blink — a hosted deposit flow for merchant a
 
 Blink lets merchants accept payments through a hosted deposit flow. Your app opens a secure modal iframe powered by Blink, and your users complete the payment without leaving your site. There is nothing to PCI-scope, no wallet UI to build, and no on-chain logic to manage.
 
+Both **web** and **mobile** SDKs are available. The web SDK (`@swype-org/deposit`) renders the payment flow in a modal iframe overlay. The mobile SDK (`@swype-org/deposit-mobile`) opens the same hosted flow in an in-app browser and returns the result via a deep link callback.
+
 ## How it works
 
 1. Your frontend calls the Deposit SDK with a transfer amount and destination.

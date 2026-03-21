@@ -19,6 +19,10 @@ import type {
 } from '@swype-org/deposit';
 ```
 
+<Info>
+`DepositRequest`, `DepositResult`, `TransferSummary`, `SignerRequest`, `SignerResponse`, and `SignerFunction` are shared between `@swype-org/deposit` (web) and `@swype-org/deposit-mobile` (mobile). The type definitions are identical across both SDKs.
+</Info>
+
 ## DepositStatus
 
 Current phase of the deposit flow.
@@ -34,7 +38,7 @@ type DepositStatus =
 
 ## DepositConfig
 
-Configuration for a `Deposit` instance. See [Deposit Class](/sdk-reference/checkout-class) for detailed descriptions.
+Configuration for a `Deposit` instance. See [Deposit Class](/sdk-reference/deposit-class) for detailed descriptions.
 
 ```typescript
 interface DepositConfig {

@@ -1,0 +1,288 @@
+---
+title: Integrate the Mobile Deposit SDK
+description: Install and configure the Mobile Deposit SDK to trigger payment flows from React Native and native mobile apps.
+---
+
+The Mobile Deposit SDK (`@swype-org/deposit-mobile`) opens Blink's hosted payment flow in an in-app browser (SFSafariViewController on iOS, Chrome Custom Tabs on Android). The user completes payment inside the browser, and the result is returned to your app via a deep link callback.
+
+## Install
+
+<CodeGroup>
+
+```bash npm
+npm install @swype-org/deposit-mobile
+```
+
+```bash yarn
+yarn add @swype-org/deposit-mobile
+```
+
+```bash pnpm
+pnpm add @swype-org/deposit-mobile
+```
+
+</CodeGroup>
+
+## Quick start (vanilla)
+
+```typescript
+import { MobileDeposit, DepositError, getDisplayMessage } from '@swype-org/deposit-mobile';
+
+const deposit = new MobileDeposit({
+  signer: 'https://api.merchant.com/sign-payment',
+  callbackScheme: 'myapp',
+  openUrl: (url) => openInAppBrowser(url),
+});
+
+// Forward deep links to the SDK
+onDeepLink((url) => deposit.handleDeepLink(url));
+
+// Start a deposit
+try {
+  const { transfer } = await deposit.requestDeposit({
+    amount: 50,
+    chainId: 8453,
+    address: '0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a',
+    token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+  });
+  console.log('Transfer complete:', transfer.id, transfer.status);
+} catch (err) {
+  if (err instanceof DepositError) {
+    showError(getDisplayMessage(err));
+  }
+}
+```
+
+## React Native (Expo)
+
+```tsx
+import { useBlinkMobileDeposit } from '@swype-org/deposit-mobile/react-native';
+import * as Linking from 'expo-linking';
+import * as WebBrowser from 'expo-web-browser';
+
+function DepositButton() {
+  const { status, result, error, displayMessage, requestDeposit, handleDeepLink } =
+    useBlinkMobileDeposit({
+      signer: 'https://api.merchant.com/sign-payment',
+      callbackScheme: 'myapp',
+      openUrl: (url) => WebBrowser.openBrowserAsync(url).then(() => {}),
+    });
+
+  useEffect(() => {
+    const sub = Linking.addEventListener('url', ({ url }) => handleDeepLink(url));
+    return () => sub.remove();
+  }, [handleDeepLink]);
+
+  return (
+    <>
+      <Button
+        title={status === 'signer-loading' ? 'Preparing...' : 'Deposit $50'}
+        disabled={status === 'signer-loading'}
+        onPress={() =>
+          requestDeposit({
+            amount: 50,
+            chainId: 8453,
+            address: '0x...',
+            token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          })
+        }
+      />
+      {error && <Text>{displayMessage}</Text>}
+      {result && <Text>Transfer {result.transfer.id} complete!</Text>}
+    </>
+  );
+}
+```
+
+The hook returns reactive `status`, `result`, `error`, `displayMessage`, and `isActive` values, plus `requestDeposit`, `handleDeepLink`, and `close` actions. It manages the `MobileDeposit` lifecycle and cleans up on unmount.
+
+## Deep link setup
+
+Your mobile app must be configured to handle the callback URL scheme so the hosted flow can redirect back after payment.
+
+### Expo / React Native
+
+In `app.json`:
+
+```json
+{
+  "expo": {
+    "scheme": "myapp"
+  }
+}
+```
+
+### iOS (native)
+
+Register your URL scheme in `Info.plist`:
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+  <dict>
+    <key>CFBundleURLSchemes</key>
+    <array>
+      <string>myapp</string>
+    </array>
+  </dict>
+</array>
+```
+
+### Android (native)
+
+Add an intent filter in `AndroidManifest.xml`:
+
+```xml
+<activity ...>
+  <intent-filter>
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="myapp" />
+  </intent-filter>
+</activity>
+```
+
+## Handling deep links
+
+The SDK does not set up deep link listeners itself — this keeps it platform-agnostic. Forward incoming URLs to `handleDeepLink()`:
+
+```typescript
+// Expo
+import * as Linking from 'expo-linking';
+Linking.addEventListener('url', ({ url }) => deposit.handleDeepLink(url));
+
+// React Native (bare)
+import { Linking } from 'react-native';
+Linking.addEventListener('url', ({ url }) => deposit.handleDeepLink(url));
+```
+
+`handleDeepLink()` returns `true` if the URL was a Blink callback, `false` otherwise.
+
+## Configuration
+
+```typescript
+const deposit = new MobileDeposit({
+  // Required: URL string or custom async function
+  signer: 'https://api.merchant.com/sign-payment',
+
+  // Required: URL scheme registered by your mobile app
+  callbackScheme: 'myapp',
+
+  // Required: function that opens a URL in an in-app browser
+  openUrl: (url) => WebBrowser.openBrowserAsync(url).then(() => {}),
+
+  // Base URL of the hosted payment app. Default: 'https://pay-staging.tryblink.xyz'
+  webviewBaseUrl: 'https://pay-staging.tryblink.xyz',
+
+  // Path for the callback deep link. Default: '/swype/callback'
+  callbackPath: '/swype/callback',
+
+  // Max ms to wait for signer response. Default: 15000
+  signerTimeoutMs: 15_000,
+
+  // Max ms for entire flow (signer + user completion). No limit by default.
+  flowTimeoutMs: 300_000,
+
+  // Enable debug logging. Default: false
+  debug: false,
+});
+```
+
+## In-app browser requirements
+
+The hosted payment flow uses WebAuthn passkeys for transaction signing. This requires a system browser component:
+
+- **iOS:** Use `SFSafariViewController` (supports WebAuthn). `WKWebView` does **not** support WebAuthn.
+- **Android:** Use Chrome Custom Tabs (supports WebAuthn). `WebView` does **not** support WebAuthn.
+- **Expo:** Use `expo-web-browser` (`WebBrowser.openBrowserAsync`), which uses the system browser component on each platform.
+
+<Warning>
+Embedded `WebView` components do not support WebAuthn passkey ceremonies. Always use `SFSafariViewController` (iOS) or Chrome Custom Tabs (Android).
+</Warning>
+
+## Custom signer function
+
+If you need full control over the HTTP call to your signer (custom headers, auth tokens, different HTTP method), pass a function instead of a URL:
+
+```typescript
+import type { SignerFunction } from '@swype-org/deposit-mobile';
+
+const deposit = new MobileDeposit({
+  signer: async (data) => {
+    const res = await fetch('https://api.merchant.com/sign-payment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${getSessionToken()}`,
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error(`Signer error: ${res.status}`);
+    return res.json();
+  },
+  callbackScheme: 'myapp',
+  openUrl: (url) => WebBrowser.openBrowserAsync(url).then(() => {}),
+});
+```
+
+## Status flow
+
+| Status | Meaning |
+|--------|---------|
+| `idle` | No active flow. |
+| `signer-loading` | Calling the merchant signer endpoint. |
+| `browser-active` | In-app browser is open, waiting for user to complete payment. |
+| `completed` | Transfer succeeded. |
+| `error` | Something failed. |
+
+```typescript
+deposit.on('status-change', (status) => console.log('Status:', status));
+
+deposit.status;    // current status
+deposit.result;    // last DepositResult (when completed)
+deposit.error;     // last DepositError (when error)
+deposit.isActive;  // true during signer-loading or browser-active
+```
+
+## Error handling
+
+See [Mobile Error Codes](/sdk-reference/mobile-errors) for the full reference. Every error is a `DepositError` with a machine-readable `code`:
+
+```typescript
+import { DepositError, getDisplayMessage } from '@swype-org/deposit-mobile';
+
+try {
+  await deposit.requestDeposit({ /* ... */ });
+} catch (err) {
+  if (err instanceof DepositError) {
+    Alert.alert('Payment Error', getDisplayMessage(err));
+    console.error(err.code, err.message);
+  }
+}
+```
+
+## Shared types
+
+The mobile SDK shares `DepositRequest`, `DepositResult`, `TransferSummary`, `SignerRequest`, `SignerResponse`, and `SignerFunction` types with the web `@swype-org/deposit` SDK. See [Types](/sdk-reference/types) for definitions.
+
+## Lifecycle
+
+```typescript
+// Cancel the current flow and reset to idle
+deposit.close();
+
+// Tear down and release all resources (call on unmount)
+deposit.destroy();
+```
+
+## Differences from the web SDK
+
+| Aspect | Web (`@swype-org/deposit`) | Mobile (`@swype-org/deposit-mobile`) |
+|--------|---------------------------|--------------------------------------|
+| Platform | Browser | React Native / iOS / Android |
+| Flow mechanism | Modal iframe + `postMessage` | In-app browser + deep link callback |
+| Completion signal | `postMessage` from iframe | URL scheme redirect |
+| `callbackScheme` | Always `null` | Required (your app's URL scheme) |
+| Extra config | `containerElement`, `hostedFlowOrigin` | `callbackScheme`, `callbackPath`, `openUrl` |
+| Deep link handling | N/A | `handleDeepLink()` required |
