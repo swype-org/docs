@@ -92,8 +92,16 @@
     ]
   },
   "contextual": {
+    "display": "header",
     "options": [
-      "copy"
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
     ]
   },
   "search": {

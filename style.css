@@ -26,8 +26,11 @@ body, p, li, td, th, a, span, div, blockquote, label, input, button, nav {
 .mdx-content th,
 .mdx-content blockquote,
 .prose p,
-.prose li {
-  line-height: 1 !important;
+.prose li,
+header .prose p,
+header .text-lg p,
+header .text-lg {
+  line-height: 1.4 !important;
 }
 
 .nav-logo {
@@ -49,19 +52,33 @@ body, p, li, td, th, a, span, div, blockquote, label, input, button, nav {
   background-color: rgb(var(--primary-light)) !important;
 }
 
+header:has(.eyebrow) {
+  position: relative !important;
+}
+
+#page-title {
+  margin-top: 12px !important;
+}
+
+@media (max-width: 639px) {
+  .eyebrow {
+    height: auto !important;
+    line-height: normal !important;
+  }
+
+  #page-context-menu:not([class*="sm:flex"]) {
+    position: absolute !important;
+    right: 0 !important;
+    top: -6px !important;
+    margin: 0 !important;
+  }
+}
+
 #content-area a.link,
 .step a.link,
 .steps a.link {
   text-decoration: underline !important;
   text-underline-offset: 2px !important;
-}
-
-.page-context-menu-button {
-  display: none !important;
-}
-
-#page-context-menu {
-  display: none !important;
 }
 
 [data-accordion] + [data-accordion],
