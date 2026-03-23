@@ -7,6 +7,12 @@
     "dark": "/logo/dark.svg"
   },
   "favicon": "/favicon.svg",
+  "metadata": {
+    "og:image": "https://docs.blink.cash/images/og-image.png",
+    "og:site_name": "Blink Documentation",
+    "twitter:card": "summary_large_image",
+    "twitter:image": "https://docs.blink.cash/images/og-image.png"
+  },
   "fonts": {
     "heading": {
       "family": "ABC Diatype Unlicensed Trial",
