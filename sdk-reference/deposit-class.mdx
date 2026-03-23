@@ -1,6 +1,6 @@
 ---
 title: Deposit Class
-description: API reference for the Deposit class — the core SDK entry point.
+description: API reference for the Deposit class. The core SDK entry point.
 ---
 
 The `Deposit` class is the main entry point for the SDK. It manages the signer call, iframe lifecycle, and completion handling.
@@ -22,7 +22,7 @@ Creates a new `Deposit` instance. Throws a `DepositError` with code `INVALID_REQ
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `signer` | `string \| SignerFunction` | **required** | URL string for the signer endpoint, or a custom async function. When a string, the SDK sends a `POST` with a JSON `SignerRequest` body. When a function, the SDK calls it with a `SignerRequest` and expects a `Promise<SignerResponse>`. |
-| `webviewBaseUrl` | `string` | `'https://pay.tryblink.xyz'` | Base URL of the hosted payment webview app. The SDK appends `merchantId`, `payload`, and `signature` as query parameters. |
+| `webviewBaseUrl` | `string` | `'https://pay.blink.cash'` | Base URL of the hosted payment webview app. The SDK appends `merchantId`, `payload`, and `signature` as query parameters. |
 | `hostedFlowOrigin` | `string` | Derived from `webviewBaseUrl` | Origin for `postMessage` validation. |
 | `containerElement` | `HTMLElement` | `document.body` | DOM element to mount the iframe overlay into. |
 | `signerTimeoutMs` | `number` | `15000` | Maximum milliseconds to wait for the signer to respond. |

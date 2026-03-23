@@ -145,7 +145,7 @@ Add an intent filter in `AndroidManifest.xml`:
 
 ## Handling deep links
 
-The SDK does not set up deep link listeners itself — this keeps it platform-agnostic. Forward incoming URLs to `handleDeepLink()`:
+The SDK does not set up deep link listeners itself. This keeps it platform-agnostic. Forward incoming URLs to `handleDeepLink()`:
 
 ```typescript
 // Expo
@@ -172,8 +172,8 @@ const deposit = new MobileDeposit({
   // Required: function that opens a URL in an in-app browser
   openUrl: (url) => WebBrowser.openBrowserAsync(url).then(() => {}),
 
-  // Base URL of the hosted payment app. Default: 'https://pay-staging.tryblink.xyz'
-  webviewBaseUrl: 'https://pay-staging.tryblink.xyz',
+  // Base URL of the hosted payment app. Default: 'https://pay-staging.blink.cash'
+  webviewBaseUrl: 'https://pay-staging.blink.cash',
 
   // Path for the callback deep link. Default: '/swype/callback'
   callbackPath: '/swype/callback',

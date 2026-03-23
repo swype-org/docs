@@ -1,0 +1,46 @@
+* {
+  font-family: 'ABC Diatype Unlicensed Trial', sans-serif !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+
+body, p, li, td, th, a, span, div, blockquote, label, input, button, nav {
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  letter-spacing: 0 !important;
+}
+
+.nav-logo {
+  max-height: 32px !important;
+  max-width: 160px !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+}
+
+.page-context-menu-button {
+  display: none !important;
+}
+
+#page-context-menu {
+  display: none !important;
+}
+
+[data-accordion] + [data-accordion],
+.accordion + .accordion,
+details + details {
+  margin-top: 1rem !important;
+}
+
+[data-step] + [data-step],
+.step + .step,
+[class*="step"] + [class*="step"],
+li + li {
+  margin-top: 0.75rem !important;
+}

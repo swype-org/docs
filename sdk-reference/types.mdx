@@ -170,7 +170,7 @@ interface SignerResponse {
 | `merchantId` | `string` | Your merchant UUID. |
 | `payload` | `string` | Base64url-encoded payment payload. |
 | `signature` | `string` | Base64url-encoded ECDSA signature of the payload string. |
-| `expiresAt` | `string?` | ISO 8601 expiration timestamp. Optional — Swype enforces expiry server-side via `signatureTimestamp` in the payload. |
+| `expiresAt` | `string?` | ISO 8601 expiration timestamp. Optional. Swype enforces expiry server-side via `signatureTimestamp` in the payload. |
 | `preview` | `object` | Echo of payment parameters for client-side display. |
 
 ## SignerFunction

@@ -5,10 +5,12 @@ description: Get a working Blink deposit integration in 5 minutes.
 
 This guide gets you from zero to a working payment flow. You will install the SDK, set up a minimal signer endpoint, and trigger your first transfer.
 
-## Prerequisites
+<Note>
+**Prerequisites**
 
 - A Blink merchant account (`merchantId` and ECDSA P-256 key pair). See [Key Generation](/integration/key-generation) and [Merchant Registration](/integration/merchant-registration) if you don't have these yet.
 - Node.js >= 18 for the signer endpoint.
+</Note>
 
 ## 1. Install the SDK
 
@@ -73,18 +75,23 @@ app.post('/api/sign-payment', (req, res) => {
 app.listen(3001);
 ```
 
+<Tip>
 Set your environment variables:
 
 ```bash
 export MERCHANT_ID="your-merchant-uuid"
 export MERCHANT_PRIVATE_KEY="$(cat private.pem)"
 ```
+</Tip>
 
+<Info>
 See [Build Your Signer Endpoint](/integration/signer-endpoint) for the full implementation with validation, security, and a Python equivalent.
+</Info>
 
 ## 3. Trigger the transfer
 
-### Vanilla JavaScript
+<Tabs>
+  <Tab title="Vanilla JavaScript">
 
 ```typescript
 import { Deposit, DepositError, getDisplayMessage } from '@swype-org/deposit';
@@ -110,7 +117,8 @@ document.getElementById('transfer-btn').addEventListener('click', async () => {
 });
 ```
 
-### React
+  </Tab>
+  <Tab title="React">
 
 ```tsx
 import { useBlinkDeposit } from '@swype-org/deposit/react';
@@ -141,24 +149,27 @@ function DepositButton() {
 }
 ```
 
+  </Tab>
+</Tabs>
+
 ## What's next
 
 You now have a working deposit flow. To go to production:
 
 <Steps>
   <Step title="Generate a production key pair">
-    [Key Generation](/integration/key-generation) — create ECDSA P-256 keys and store the private key in a secrets manager.
+    [Key Generation](/integration/key-generation). Create ECDSA P-256 keys and store the private key in a secrets manager.
   </Step>
   <Step title="Register your merchant account">
-    [Merchant Registration](/integration/merchant-registration) — send your public key to Blink.
+    [Merchant Registration](/integration/merchant-registration). Send your public key to Blink.
   </Step>
   <Step title="Harden your signer">
-    [Signer Endpoint](/integration/signer-endpoint) — add request validation, authentication, rate limiting, and CORS.
+    [Signer Endpoint](/integration/signer-endpoint). Add request validation, authentication, rate limiting, and CORS.
   </Step>
   <Step title="Handle errors gracefully">
-    [Error Handling](/sdk-reference/errors) — use `DepositError` codes and `getDisplayMessage()` in your UI.
+    [Error Handling](/sdk-reference/errors). Use `DepositError` codes and `getDisplayMessage()` in your UI.
   </Step>
   <Step title="Run the production checklist">
-    [Production Checklist](/integration/production-checklist) — verify every item before going live.
+    [Production Checklist](/integration/production-checklist). Verify every item before going live.
   </Step>
 </Steps>

@@ -5,6 +5,20 @@ description: Send your public key to Blink and receive your merchant ID.
 
 After [generating your key pair](/integration/key-generation), send your **public key PEM** to Blink to register as a merchant.
 
+## Register with Blink
+
+Fill out the form below with your merchant details and public key. Once submitted, the Blink team will review your registration and provision your `merchantId`.
+
+<iframe
+  src="https://docs.google.com/forms/d/e/1FAIpQLScYGgXA4oi0TA7dWc7rDYYbi3t9LQgY3T-AytBDEJ2APUBEfA/viewform?embedded=true"
+  width="100%"
+  height="800"
+  frameBorder="0"
+  style={{ border: "none", borderRadius: "8px" }}
+>
+  Loading registration form...
+</iframe>
+
 ## What Blink registers
 
 | Field | Value |
@@ -19,13 +33,23 @@ Once registered, Blink's hosted flow verifies every signed payment link your sig
 
 ## What you receive
 
-After registration, Blink provides your `merchantId` — a UUID you will configure in your signer endpoint. This ID is included in every `SignerResponse` so Blink knows which public key to use for verification.
+After registration, Blink provides your `merchantId`, a UUID you will configure in your signer endpoint. This ID is included in every `SignerResponse` so Blink knows which public key to use for verification.
 
 ## Key rotation
 
 Your public key can be updated by contacting Blink. When rotating keys:
 
-1. Generate a new key pair.
-2. Send the new public key to Blink.
-3. Once confirmed, update your signer endpoint to use the new private key.
-4. The old key is deactivated immediately — do not rotate during high-traffic periods.
+<Steps>
+  <Step title="Generate a new key pair">
+    Follow the same process in [Key Generation](/integration/key-generation).
+  </Step>
+  <Step title="Send the new public key to Blink">
+    Submit your updated PEM via the registration form above or contact the Blink team directly.
+  </Step>
+  <Step title="Update your signer endpoint">
+    Once confirmed, swap your signer endpoint to use the new private key.
+  </Step>
+  <Step title="Old key deactivation">
+    The old key is deactivated immediately. Do not rotate during high-traffic periods.
+  </Step>
+</Steps>

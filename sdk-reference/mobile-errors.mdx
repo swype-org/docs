@@ -72,24 +72,24 @@ try {
 
   switch (err.code) {
     case 'BROWSER_DISMISSED':
-      // User intentionally closed — no action needed
+      // User intentionally closed, no action needed
       break;
     case 'BROWSER_FAILED':
-      // Could not open browser — prompt retry or show fallback
+      // Could not open browser, prompt retry or show fallback
       showRetryDialog(getDisplayMessage(err));
       break;
     case 'DEEP_LINK_INVALID':
-      // Malformed callback — log for investigation
+      // Malformed callback, log for investigation
       reportError(err);
       break;
     case 'SIGNER_REQUEST_FAILED':
     case 'SIGNER_NETWORK_ERROR':
     case 'SIGNER_TIMEOUT':
-      // Signer issue — prompt retry
+      // Signer issue, prompt retry
       showRetryDialog(getDisplayMessage(err));
       break;
     case 'SIGNER_RESPONSE_INVALID':
-      // Integration bug — log for investigation
+      // Integration bug, log for investigation
       reportError(err);
       break;
     case 'FLOW_TIMEOUT':

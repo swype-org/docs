@@ -5,36 +5,44 @@ description: Verify every item before going live with Blink payments.
 
 Before going live, verify each item:
 
-## Keys and registration
+<Accordion title="Keys and registration" icon="key" defaultOpen>
+  <Steps>
+    <Step title="Generated an ECDSA P-256 key pair." />
+    <Step title="Private key stored in a secrets manager or HSM (not in code, not in env files on disk)." />
+    <Step title="Public key registered with Blink; merchantId received and configured." />
+    <Step title="Key rotation plan documented." />
+  </Steps>
+</Accordion>
 
-- [ ] Generated an ECDSA P-256 key pair.
-- [ ] Private key stored in a secrets manager or HSM (not in code, not in env files on disk).
-- [ ] Public key registered with Blink; `merchantId` received and configured.
-- [ ] Key rotation plan documented.
+<Accordion title="Signer endpoint" icon="server" defaultOpen>
+  <Steps>
+    <Step title="Signer served over HTTPS only." />
+    <Step title="Signer authenticates callers (session token, API key, or CORS restriction)." />
+    <Step title="Request validation implemented for all fields (amount, chainId, address, token, callbackScheme)." />
+    <Step title="Token validation checks for valid contract address format (0x-prefixed hex)." />
+    <Step title="Idempotency keys are generated as UUID v4 per request." />
+    <Step title="signatureTimestamp included in all signed payloads." />
+    <Step title="Rate limiting is in place to prevent abuse." />
+    <Step title="Error responses do not leak internal details (stack traces, key paths, etc.)." />
+    <Step title="CORS configured to only allow your frontend origin(s)." />
+  </Steps>
+</Accordion>
 
-## Signer endpoint
+<Accordion title="Deposit SDK" icon="code" defaultOpen>
+  <Steps>
+    <Step title="SDK installed and configured with production signer URL." />
+    <Step title="webviewBaseUrl set to the Blink production URL (confirm with Blink)." />
+    <Step title="Error handling implemented with DepositError codes and user-friendly messages via getDisplayMessage()." />
+    <Step title="deposit.destroy() called on component unmount / page unload." />
+    <Step title="Viewport meta tag set correctly for mobile (no unexpected scaling)." />
+  </Steps>
+</Accordion>
 
-- [ ] Signer served over HTTPS only.
-- [ ] Signer authenticates callers (session token, API key, or CORS restriction).
-- [ ] Request validation implemented for all fields (`amount`, `chainId`, `address`, `token`, `callbackScheme`).
-- [ ] Token validation checks for valid contract address format (`0x`-prefixed hex).
-- [ ] Idempotency keys are generated as UUID v4 per request.
-- [ ] `signatureTimestamp` included in all signed payloads.
-- [ ] Rate limiting is in place to prevent abuse.
-- [ ] Error responses do not leak internal details (stack traces, key paths, etc.).
-- [ ] CORS configured to only allow your frontend origin(s).
-
-## Deposit SDK
-
-- [ ] SDK installed and configured with production `signer` URL.
-- [ ] `webviewBaseUrl` set to the Blink production URL (confirm with Blink).
-- [ ] Error handling implemented with `DepositError` codes and user-friendly messages via `getDisplayMessage()`.
-- [ ] `deposit.destroy()` called on component unmount / page unload.
-- [ ] Viewport meta tag set correctly for mobile (no unexpected scaling).
-
-## Monitoring and reconciliation
-
-- [ ] Signer requests and responses logged (excluding private key material).
-- [ ] `reference` and/or `metadata` used for correlating payments with internal orders.
-- [ ] Transfer status verified server-side (do not rely solely on the client-side `DepositResult`).
-- [ ] Alerting configured for signer errors, timeouts, and elevated failure rates.
+<Accordion title="Monitoring and reconciliation" icon="chart-line" defaultOpen>
+  <Steps>
+    <Step title="Signer requests and responses logged (excluding private key material)." />
+    <Step title="reference and/or metadata used for correlating payments with internal orders." />
+    <Step title="Transfer status verified server-side (do not rely solely on the client-side DepositResult)." />
+    <Step title="Alerting configured for signer errors, timeouts, and elevated failure rates." />
+  </Steps>
+</Accordion>

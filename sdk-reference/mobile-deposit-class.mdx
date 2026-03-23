@@ -1,6 +1,6 @@
 ---
 title: MobileDeposit Class
-description: API reference for the MobileDeposit class — the core entry point for mobile SDK integrations.
+description: API reference for the MobileDeposit class. The core entry point for mobile SDK integrations.
 ---
 
 The `MobileDeposit` class is the main entry point for the mobile SDK. It manages the signer call, in-app browser lifecycle, deep link handling, and completion detection.
@@ -24,7 +24,7 @@ Creates a new `MobileDeposit` instance. Throws a `DepositError` with code `INVAL
 | `signer` | `string \| SignerFunction` | **required** | URL string for the signer endpoint, or a custom async function. When a string, the SDK sends a `POST` with a JSON `SignerRequest` body. When a function, the SDK calls it with a `SignerRequest` and expects a `Promise<SignerResponse>`. |
 | `callbackScheme` | `string` | **required** | Custom URL scheme registered by the mobile app (e.g. `'myapp'`). The hosted flow redirects to `{callbackScheme}://swype/callback?...` on completion. |
 | `openUrl` | `(url: string) => Promise<void>` | **required** | Function that opens a URL in an in-app browser. Use `expo-web-browser`, `SFSafariViewController` (iOS), or `CustomTabsIntent` (Android). The returned promise should resolve when the browser is dismissed. |
-| `webviewBaseUrl` | `string` | `'https://pay-staging.tryblink.xyz'` | Base URL of the hosted payment webview app. |
+| `webviewBaseUrl` | `string` | `'https://pay-staging.blink.cash'` | Base URL of the hosted payment webview app. |
 | `callbackPath` | `string` | `'/swype/callback'` | Path component of the callback deep link. |
 | `signerTimeoutMs` | `number` | `15000` | Maximum milliseconds to wait for the signer to respond. |
 | `flowTimeoutMs` | `number` | `undefined` (no limit) | Maximum milliseconds for the entire flow (signer + user completion). |

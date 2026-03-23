@@ -35,12 +35,12 @@ For staging and shared environments:
 - Deploy your signer as a server endpoint or serverless function (e.g., AWS Lambda).
 - Store the private key in a secrets manager (e.g., AWS Secrets Manager).
 - Point the Deposit SDK's `signer` config at your deployed signer URL.
-- Set `webviewBaseUrl` to the Blink staging URL: `https://pay-staging.tryblink.xyz`.
+- Set `webviewBaseUrl` to the Blink staging URL: `https://pay-staging.blink.cash`.
 
 ```typescript
 const deposit = new Deposit({
   signer: 'https://your-staging-api.example.com/api/sign-payment',
-  webviewBaseUrl: 'https://pay-staging.tryblink.xyz',
+  webviewBaseUrl: 'https://pay-staging.blink.cash',
 });
 ```
 

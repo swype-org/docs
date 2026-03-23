@@ -76,24 +76,24 @@ try {
 
   switch (err.code) {
     case 'DEPOSIT_DISMISSED':
-      // User intentionally closed — no action needed
+      // User intentionally closed, no action needed
       break;
     case 'SIGNER_REQUEST_FAILED':
     case 'SIGNER_NETWORK_ERROR':
     case 'SIGNER_TIMEOUT':
-      // Signer issue — prompt retry
+      // Signer issue, prompt retry
       showRetryDialog(getDisplayMessage(err));
       break;
     case 'SIGNER_RESPONSE_INVALID':
-      // Integration bug — log for investigation
+      // Integration bug, log for investigation
       reportError(err);
       break;
     case 'FLOW_TIMEOUT':
-      // Flow took too long — prompt retry
+      // Flow took too long, prompt retry
       showRetryDialog(getDisplayMessage(err));
       break;
     case 'INVALID_REQUEST':
-      // Bad input — show validation error
+      // Bad input, show validation error
       showValidationError(getDisplayMessage(err));
       break;
   }

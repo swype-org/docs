@@ -60,7 +60,7 @@ The hook accepts a single `DepositConfig` object. See [Deposit Class](/sdk-refer
 useBlinkDeposit(config: DepositConfig): UseBlinkDepositReturn
 ```
 
-The `Deposit` instance is created once on first render and destroyed on unmount. The `config` is read during initialization only — changing config props after mount does not reconfigure the instance.
+The `Deposit` instance is created once on first render and destroyed on unmount. The `config` is read during initialization only. Changing config props after mount does not reconfigure the instance.
 
 ## Return value
 

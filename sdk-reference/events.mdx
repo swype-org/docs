@@ -99,7 +99,7 @@ deposit
 
 ### close()
 
-Closes the transfer iframe and resets status to `idle`. Fires the `close` event. Does not destroy the instance — you can call `requestDeposit()` again.
+Closes the transfer iframe and resets status to `idle`. Fires the `close` event. Does not destroy the instance. You can call `requestDeposit()` again.
 
 ```typescript
 deposit.close();
@@ -112,10 +112,10 @@ Closes the iframe, removes all event listeners, and marks the instance as destro
 Call this when the component unmounts or the page unloads.
 
 ```typescript
-// Vanilla JS — on page unload
+// Vanilla JS, on page unload
 window.addEventListener('beforeunload', () => deposit.destroy());
 
-// React — handled automatically by useBlinkDeposit
+// React, handled automatically by useBlinkDeposit
 ```
 
 <Warning>

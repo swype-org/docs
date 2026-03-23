@@ -7,10 +7,24 @@
     "dark": "/logo/dark.svg"
   },
   "favicon": "/favicon.svg",
+  "fonts": {
+    "heading": {
+      "family": "ABC Diatype Unlicensed Trial",
+      "source": "/fonts/ABCDiatype-Bold-Trial.woff2",
+      "format": "woff2",
+      "weight": 700
+    },
+    "body": {
+      "family": "ABC Diatype Unlicensed Trial",
+      "source": "/fonts/ABCDiatype-Regular-Trial.woff2",
+      "format": "woff2",
+      "weight": 400
+    }
+  },
   "colors": {
-    "primary": "#6366F1",
-    "light": "#818CF8",
-    "dark": "#4F46E5"
+    "primary": "#56A4FF",
+    "light": "#CAFF34",
+    "dark": "#CAFF34"
   },
   "navigation": {
     "tabs": [
@@ -61,21 +75,25 @@
       }
     ]
   },
+  "navbar": {
+    "links": [
+      {
+        "label": "Contact",
+        "href": "https://blink.cash"
+      }
+    ]
+  },
   "contextual": {
     "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
+      "copy"
     ]
+  },
+  "search": {
+    "prompt": "Search docs..."
   },
   "footer": {
     "socials": {
-      "website": "https://tryblink.xyz"
+      "website": "https://blink.cash"
     }
   }
 }

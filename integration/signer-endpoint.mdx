@@ -3,7 +3,7 @@ title: Build Your Signer Endpoint
 description: Create the server-side endpoint that validates and signs payment requests.
 ---
 
-The signer is a **server-side** HTTP endpoint that receives a `SignerRequest` from the Deposit SDK, creates a signed payment link, and returns a `SignerResponse`. This is the core security mechanism — it ensures every payment was authorized by your server.
+The signer is a **server-side** HTTP endpoint that receives a `SignerRequest` from the Deposit SDK, creates a signed payment link, and returns a `SignerResponse`. This is the core security mechanism. It ensures every payment was authorized by your server.
 
 ## Request format
 
@@ -16,7 +16,7 @@ The Deposit SDK sends a `POST` request with this JSON body to your signer URL:
 | `address` | `string` | Destination wallet address (0x-prefixed, 40 hex characters). |
 | `token` | `string` | Token contract address on the destination chain (0x-prefixed hex). For example, `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` for USDC on Base. |
 | `callbackScheme` | `string \| null` | Always `null` for browser integrations. Reserved for native app deep-link callbacks. |
-| `url` | `string` | Base webview URL the SDK will navigate to. Provided for logging/validation only — your signer does not construct the final URL. |
+| `url` | `string` | Base webview URL the SDK will navigate to. Provided for logging/validation only. Your signer does not construct the final URL. |
 | `version` | `string` | Protocol version (currently `"v1"`). |
 | `reference` | `string?` | Optional merchant order or invoice ID for reconciliation. |
 | `metadata` | `Record<string, string>?` | Optional arbitrary key-value pairs for your records. |
@@ -30,7 +30,7 @@ Example request body:
   "address": "0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a",
   "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
   "callbackScheme": null,
-  "url": "https://pay.tryblink.xyz",
+  "url": "https://pay.blink.cash",
   "version": "v1",
   "reference": "order-123",
   "metadata": { "invoiceId": "INV-456" }
@@ -347,10 +347,10 @@ For merchants implementing the signer in any language:
 The signer endpoint is a security-critical component. A compromised signer allows unauthorized payment link creation.
 </Warning>
 
-- **HTTPS only** — never serve the signer over plain HTTP in production.
-- **Authenticate callers** — the signer should only accept requests from your own frontend. Use session cookies, auth tokens, or CORS restrictions.
-- **Verify destination ownership** — confirm the authenticated user controls the destination `address` before signing. Without this, a malicious user could redirect funds to a wallet they don't own. See [step 2](#2-verify-destination-ownership) above.
-- **Server-enforced expiry** — Swype enforces a maximum signature age of 15 minutes. Include `signatureTimestamp` in every payload so Swype can reject stale signatures. You do not need to manage expiration TTLs yourself.
-- **Rate limit** — protect against abuse by rate-limiting signer requests per user/session.
-- **Log, but never log the private key** — log request metadata for debugging, but never log the private key or raw signature in production.
-- **CORS** — configure CORS to only allow your frontend origin(s).
+- **HTTPS only.** Never serve the signer over plain HTTP in production.
+- **Authenticate callers.** The signer should only accept requests from your own frontend. Use session cookies, auth tokens, or CORS restrictions.
+- **Verify destination ownership.** Confirm the authenticated user controls the destination `address` before signing. Without this, a malicious user could redirect funds to a wallet they don't own. See [step 2](#2-verify-destination-ownership) above.
+- **Server-enforced expiry.** Swype enforces a maximum signature age of 15 minutes. Include `signatureTimestamp` in every payload so Swype can reject stale signatures. You do not need to manage expiration TTLs yourself.
+- **Rate limit.** Protect against abuse by rate-limiting signer requests per user/session.
+- **Log, but never log the private key.** Log request metadata for debugging, but never log the private key or raw signature in production.
+- **CORS.** Configure CORS to only allow your frontend origin(s).
