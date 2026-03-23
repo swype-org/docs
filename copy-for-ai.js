@@ -7,7 +7,7 @@
     "[Generate Your Key Pair](/integration/key-generation): Create an ECDSA P-256 key pair for signing payment requests.",
     "[Register Your Merchant Account](/integration/merchant-registration): Send your public key to Blink and receive your merchant ID.",
     "[Build Your Signer Endpoint](/integration/signer-endpoint): Create the server-side endpoint that validates and signs payment requests.",
-    "[Integrate the Deposit SDK](/integration/deposit-sdk): Install and configure the Deposit SDK to trigger payment flows from your frontend.",
+    "[Integrate the Deposit SDK](/integration/deposit-sdk): Install and configure the Deposit SDK to trigger deposit flows from your frontend.",
     "[Integrate the Mobile Deposit SDK](/integration/deposit-mobile-sdk): Install and configure the Mobile Deposit SDK for React Native and native mobile apps.",
     "[Testing](/integration/testing): Verify your Blink integration with the sample app and staging environment.",
     "[Production Checklist](/integration/production-checklist): Verify every item before going live with Blink payments.",

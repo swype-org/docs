@@ -37,7 +37,7 @@ Creates a new `Deposit` instance. Throws a `DepositError` with code `INVALID_REQ
 deposit.requestDeposit(request: DepositRequest): Promise<DepositResult>
 ```
 
-Opens the hosted payment flow for the given deposit. The returned Promise resolves when the user completes the payment and rejects with a `DepositError` on failure.
+Opens the hosted deposit flow for the given deposit. The returned Promise resolves when the user completes the payment and rejects with a `DepositError` on failure.
 
 If a flow is already active, calling `requestDeposit` again cancels the previous flow and starts a new one.
 

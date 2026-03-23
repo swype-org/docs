@@ -3,7 +3,7 @@ title: Events and Lifecycle
 description: Event system, status transitions, and instance lifecycle management.
 ---
 
-The `Deposit` class emits events during the payment flow. Use `on()` and `off()` to subscribe and unsubscribe.
+The `Deposit` class emits events during the deposit flow. Use `on()` and `off()` to subscribe and unsubscribe.
 
 ## Events
 
@@ -20,7 +20,7 @@ deposit.on('complete', (result: DepositResult) => {
 
 ### error
 
-Fired when the payment flow fails. The handler receives a `DepositError`.
+Fired when the deposit flow fails. The handler receives a `DepositError`.
 
 ```typescript
 deposit.on('error', (error: DepositError) => {

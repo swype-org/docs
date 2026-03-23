@@ -1,9 +1,9 @@
 ---
 title: Integrate the Mobile Deposit SDK
-description: Install and configure the Mobile Deposit SDK to trigger payment flows from React Native and native mobile apps.
+description: Install and configure the Mobile Deposit SDK to trigger deposit flows from React Native and native mobile apps.
 ---
 
-The Mobile Deposit SDK (`@swype-org/deposit-mobile`) opens Blink's hosted payment flow in an in-app browser (SFSafariViewController on iOS, Chrome Custom Tabs on Android). The user completes payment inside the browser, and the result is returned to your app via a deep link callback.
+The Mobile Deposit SDK (`@swype-org/deposit-mobile`) opens Blink's hosted deposit flow in an in-app browser (SFSafariViewController on iOS, Chrome Custom Tabs on Android). The user completes payment inside the browser, and the result is returned to your app via a deep link callback.
 
 ## Install
 
@@ -191,7 +191,7 @@ const deposit = new MobileDeposit({
 
 ## In-app browser requirements
 
-The hosted payment flow uses WebAuthn passkeys for transaction signing. This requires a system browser component:
+The hosted deposit flow uses WebAuthn passkeys for transaction signing. This requires a system browser component:
 
 - **iOS:** Use `SFSafariViewController` (supports WebAuthn). `WKWebView` does **not** support WebAuthn.
 - **Android:** Use Chrome Custom Tabs (supports WebAuthn). `WebView` does **not** support WebAuthn.
