@@ -12,8 +12,22 @@ h1, h2, h3, h4, h5, h6 {
 
 body, p, li, td, th, a, span, div, blockquote, label, input, button, nav {
   font-weight: 400 !important;
-  line-height: 1 !important;
   letter-spacing: 0 !important;
+}
+
+#content-area p,
+#content-area li,
+#content-area td,
+#content-area th,
+#content-area blockquote,
+.mdx-content p,
+.mdx-content li,
+.mdx-content td,
+.mdx-content th,
+.mdx-content blockquote,
+.prose p,
+.prose li {
+  line-height: 1 !important;
 }
 
 .nav-logo {

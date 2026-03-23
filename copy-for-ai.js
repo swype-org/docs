@@ -113,19 +113,17 @@
     var existing = document.getElementById("copy-for-ai-btn");
     if (existing) return;
 
-    var header = document.querySelector("#header, .eyebrow, [class*='eyebrow']");
-    if (!header) {
-      var pageTitle = document.querySelector("#page-title");
-      if (pageTitle) header = pageTitle.parentElement;
-    }
-    if (!header) return;
+    var eyebrow = document.querySelector(".eyebrow, [class*='eyebrow']");
+    if (!eyebrow) return;
 
-    header.style.position = "relative";
+    eyebrow.style.display = "flex";
+    eyebrow.style.alignItems = "center";
+    eyebrow.style.justifyContent = "space-between";
 
     var btn = document.createElement("button");
     btn.id = "copy-for-ai-btn";
     btn.textContent = "Copy page for AI";
-    btn.style.cssText = "position:absolute;right:0;top:50%;transform:translateY(-50%);padding:6px 12px;border-radius:6px;border:1px solid rgba(128,128,128,0.25);background:transparent;color:inherit;font-size:12px;font-family:inherit;cursor:pointer;transition:border-color 0.15s;white-space:nowrap;";
+    btn.style.cssText = "padding:4px 10px;border-radius:6px;border:1px solid rgba(128,128,128,0.25);background:transparent;color:inherit;font-size:12px;font-family:inherit;cursor:pointer;transition:border-color 0.15s;white-space:nowrap;flex-shrink:0;color:var(--tw-prose-body, inherit);font-weight:400;";
     btn.onmouseenter = function () { btn.style.borderColor = "var(--primary, #CAFF34)"; };
     btn.onmouseleave = function () { btn.style.borderColor = "rgba(128,128,128,0.25)"; };
 
@@ -138,7 +136,7 @@
       });
     });
 
-    header.appendChild(btn);
+    eyebrow.appendChild(btn);
   }
 
   function init() {
