@@ -24,6 +24,24 @@ body, p, li, td, th, a, span, div, blockquote, label, input, button, nav {
   object-fit: contain !important;
 }
 
+.step .size-7.rounded-full,
+.step div.rounded-full {
+  background-color: rgb(var(--primary)) !important;
+  color: black !important;
+}
+
+:is(.dark, [class~="dark"]) .step .size-7.rounded-full,
+:is(.dark, [class~="dark"]) .step div.rounded-full {
+  background-color: rgb(var(--primary-light)) !important;
+}
+
+#content-area a.link,
+.step a.link,
+.steps a.link {
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+}
+
 .page-context-menu-button {
   display: none !important;
 }

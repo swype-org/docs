@@ -90,10 +90,9 @@ See [Build Your Signer Endpoint](/integration/signer-endpoint) for the full impl
 
 ## 3. Trigger the transfer
 
-<Tabs>
-  <Tab title="Vanilla JavaScript">
+<CodeGroup>
 
-```typescript
+```typescript JavaScript
 import { Deposit, DepositError, getDisplayMessage } from '@swype-org/deposit';
 
 const deposit = new Deposit({
@@ -117,10 +116,7 @@ document.getElementById('transfer-btn').addEventListener('click', async () => {
 });
 ```
 
-  </Tab>
-  <Tab title="React">
-
-```tsx
+```tsx React
 import { useBlinkDeposit } from '@swype-org/deposit/react';
 
 function DepositButton() {
@@ -149,8 +145,7 @@ function DepositButton() {
 }
 ```
 
-  </Tab>
-</Tabs>
+</CodeGroup>
 
 ## What's next
 
