@@ -47,6 +47,8 @@
             "group": "Integration Guide",
             "pages": [
               "integration/architecture",
+              "integration/supported-networks-and-wallets",
+              "integration/fees",
               "integration/key-generation",
               "integration/merchant-registration",
               "integration/signer-endpoint",

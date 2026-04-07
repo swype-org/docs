@@ -32,6 +32,16 @@ The flow above shows the web integration. For **mobile apps**, the Mobile Deposi
 | **Hosted Flow** | Browser (iframe) | Blink's payment UI. Verifies the merchant signature, authenticates the user, handles wallet connection, and executes the on-chain transfer. |
 | **Blink API** | Server | Stores merchant public keys, creates transfers, manages wallets and accounts. |
 
+## Supported routes and fees
+
+Blink currently supports source-wallet connection on Ethereum Mainnet, Base, Arbitrum One, Polygon, and BNB Smart Chain. Destination support includes those EVM routes plus destination-only assets such as Solana `USDC`.
+
+For cross-chain deposits, Blink fixes the input amount and routes the transfer using a live Relay quote. Treat the destination output amount as quote-based instead of assuming a guaranteed `1:1` result on every route.
+
+For existing Blink users making redeposits, Blink sponsors the Relay fee. Guest deposit flows still incur the normal Relay fee.
+
+See [Supported Networks and Wallets](/integration/supported-networks-and-wallets) for the current wallet, chain, and token matrix, and [Fees](/integration/fees) for the fee breakdown.
+
 ## Security model
 
 1. **Private key stays on your server.** The Deposit SDK never sees your private key. It only receives the signed payload from your signer endpoint.

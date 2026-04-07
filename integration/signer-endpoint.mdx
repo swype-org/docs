@@ -12,9 +12,9 @@ The Deposit SDK sends a `POST` request with this JSON body to your signer URL:
 | Field | Type | Description |
 |-------|------|-------------|
 | `amount` | `number` | USD amount to deposit. Always > 0. |
-| `chainId` | `number` | EVM chain ID for the destination (e.g., `8453` for Base, `42161` for Arbitrum). |
-| `address` | `string` | Destination wallet address (0x-prefixed, 40 hex characters). |
-| `token` | `string` | Token contract address on the destination chain (0x-prefixed hex). For example, `0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` for USDC on Base. |
+| `chainId` | `number` | Destination chain ID (for example, `8453` for Base, `42161` for Arbitrum, or `792703809` for Solana). |
+| `address` | `string` | Destination wallet address. In the web SDK this can be an EVM address or a Solana address, depending on the destination chain. |
+| `token` | `string` | Destination token identifier for that chain. Use an EVM token contract address on EVM chains or an SPL mint address on Solana. |
 | `callbackScheme` | `string \| null` | Always `null` for browser integrations. Reserved for native app deep-link callbacks. |
 | `url` | `string` | Base webview URL the SDK will navigate to. Provided for logging/validation only. Your signer does not construct the final URL. |
 | `version` | `string` | Protocol version (currently `"v1"`). |
@@ -47,12 +47,16 @@ Your endpoint must perform these steps in order:
 |-------|-----------------|
 | `amount` | `Number.isFinite(amount) && amount > 0` |
 | `chainId` | `Number.isInteger(chainId) && chainId > 0` |
-| `address` | Matches `/^0x[a-fA-F0-9]{40}$/` |
-| `token` | Matches `/^0x[a-fA-F0-9]{1,40}$/` (contract address) |
+| `address` | Validate based on the requested destination chain. For the web SDK, accept EVM addresses on EVM chains and Solana Base58 addresses on Solana. |
+| `token` | Validate based on the requested destination chain. For the web SDK, accept EVM contract addresses on EVM chains and SPL mint addresses on Solana. |
 | `callbackScheme` | `null` or matches `/^[a-zA-Z][a-zA-Z0-9+\-.]*$/` |
 | `version` | Non-empty string (default to `"v1"` if missing) |
 
 Return HTTP 400 with an error message for any validation failure.
+
+<Info>
+Your signer should allowlist only Blink-supported destination `chainId` and `token` combinations. See [Supported Networks and Wallets](/integration/supported-networks-and-wallets) for the current routing catalog.
+</Info>
 
 ### 2. Verify destination ownership
 

@@ -138,15 +138,19 @@ const deposit = new Deposit({
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `amount` | `number` | Yes | USD amount to deposit (> 0). |
-| `chainId` | `number` | Yes | EVM chain ID for the destination. Dynamic per user. |
-| `address` | `string` | Yes | Destination wallet address (0x-prefixed, 40 hex chars). Dynamic per user. |
-| `token` | `string` | Yes | Token contract address on the destination chain (0x-prefixed hex). |
+| `chainId` | `number` | Yes | Destination chain ID. Dynamic per user. For example, `8453` for Base or `792703809` for Solana. |
+| `address` | `string` | Yes | Destination wallet address. For the web SDK this can be an EVM address or a Solana address, depending on the destination chain. |
+| `token` | `string` | Yes | Destination token identifier. Use an EVM token contract address on EVM chains or an SPL mint address on Solana. |
 | `callbackScheme` | `string \| null` | No | Always `null` for browser integrations. Reserved for native app deep links. |
 | `reference` | `string` | No | Merchant order/invoice ID for reconciliation. |
 | `metadata` | `Record<string, string>` | No | Arbitrary key-value pairs forwarded to your signer. |
 
 <Info>
 The destination `chainId`, `address`, and `token` are **not** static merchant configuration. They are set dynamically per transaction, typically based on the user's embedded wallet.
+</Info>
+
+<Info>
+Choose destination values from Blink's active routing catalog. See [Supported Networks and Wallets](/integration/supported-networks-and-wallets) for the current wallet, chain, token, and fee model details.
 </Info>
 
 ## Deposit result

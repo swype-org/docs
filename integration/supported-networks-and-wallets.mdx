@@ -1,0 +1,121 @@
+---
+title: Supported Networks and Wallets
+description: Current Blink support for connected wallets, source chains, destination chains, tokens, and deposit fee behavior.
+---
+
+Use this page as the canonical allowlist for Blink deposits when wiring `chainId`, `address`, and `token` into your web Deposit SDK integration and signer endpoint.
+
+<Info>
+Use the values on this page when validating deposit destinations in your signer and when choosing supported routes in your app UI.
+</Info>
+
+## Connected wallets
+
+These are the wallet providers currently wired into Blink for source-wallet connection:
+
+| Wallet | Supported source chains |
+|--------|-------------------------|
+| MetaMask | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
+| Coinbase Wallet | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
+| Trust Wallet | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
+
+<Note>
+Wallet support here refers to source-wallet connection for deposit routing. Destination support is chain-and-token based and is listed below.
+</Note>
+
+## Source chains and tokens
+
+These are the currently supported source-chain stablecoins Blink can route from:
+
+| Source chain | Chain ID | Supported tokens |
+|--------------|----------|------------------|
+| Ethereum Mainnet | `1` | `USDC`, `USDT` |
+| Base | `8453` | `USDC`, `USDT` |
+| Arbitrum One | `42161` | `USDC`, `USDT` |
+| Polygon | `137` | `USDC.e`, `USDC`, `USDT` |
+| BNB Smart Chain | `56` | `USDC`, `USDT` |
+
+<Tip>
+Polygon `USDC.e` remains supported today alongside Polygon native `USDC`.
+</Tip>
+
+## Destination chains and tokens
+
+These are the currently supported destination routes for Blink deposits:
+
+| Destination chain | Chain ID | Supported tokens | Notes |
+|-------------------|----------|------------------|-------|
+| Ethereum Mainnet | `1` | `USDC`, `USDT` | Can be used as a destination. |
+| Base | `8453` | `USDC`, `USDT` | Can be used as a destination. |
+| Arbitrum One | `42161` | `USDC`, `USDT` | Can be used as a destination. |
+| Polygon | `137` | `USDC.e`, `USDC`, `USDT` | Can be used as a destination. |
+| BNB Smart Chain | `56` | `USDC`, `USDT` | Can be used as a destination. |
+| Solana | `792703809` | `USDC` | Destination-only today. Use the SPL mint address for `token`. |
+| Hyperliquid | `999` | `USDC` | Destination-only today. |
+| Hyperliquid L1 | `1337` | `USDC` | Destination-only today. |
+
+<Info>
+Solana is currently supported as a destination-only route. For Solana destinations, use the destination wallet's Solana address and the SPL mint address for the selected token.
+</Info>
+
+## Destination parameter format
+
+When you call `requestDeposit()` in the web SDK:
+
+- `chainId` should be the destination chain ID from the tables above.
+- `address` should be the destination wallet address for that chain.
+- `token` should be the token contract address on EVM chains or the SPL mint address on Solana.
+
+Examples:
+
+```typescript
+// Base USDC destination
+{
+  chainId: 8453,
+  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+}
+
+// Solana USDC destination
+{
+  chainId: 792703809,
+  token: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
+}
+```
+
+## FAQ
+
+### Is Polygon `USDC.e` currently available?
+
+Yes. Polygon `USDC.e` is still supported today, alongside Polygon native `USDC` and `USDT`.
+
+### Is Solana `USDC` available for deposit paths?
+
+Yes. Solana `USDC` is supported as a destination today.
+
+### If I deposit `1 USDC` on Base into a Solana wallet with `USDC` as the destination, should I receive `1 USDC` on Solana?
+
+Treat the destination amount as quote-based. Blink fixes the source input amount and routes the transfer using a live Relay quote, so the docs should not promise an exact `1:1` destination amount on every cross-chain route.
+
+See [Fees](/integration/fees) for how Blink handles redeposit subsidy versus guest checkout fees.
+
+### What wallets are supported?
+
+Blink currently supports MetaMask, Coinbase Wallet, and Trust Wallet for source-wallet connection on supported EVM source chains.
+
+### What chains are supported?
+
+Source-capable chains today are Ethereum Mainnet, Base, Arbitrum One, Polygon, and BNB Smart Chain.
+
+Destination support includes those networks plus destination-only routes for Solana, Hyperliquid, and Hyperliquid L1.
+
+### What tokens are supported?
+
+Blink currently supports `USDC` and `USDT` across the seeded EVM routes, plus Polygon `USDC.e`, plus Solana `USDC`.
+
+## Signer guidance
+
+Your signer should allowlist only the destination `chainId` and `token` combinations Blink currently supports. This prevents invalid destination requests from being signed and keeps your integration aligned with Blink's active routing catalog.
+
+<Info>
+If you also expose available routes in your own product UI, keep that UI in sync with this same allowlist so users only see destinations Blink can currently settle.
+</Info>

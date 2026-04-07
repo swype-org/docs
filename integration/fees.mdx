@@ -1,0 +1,47 @@
+---
+title: Fees
+description: How Blink deposit fees work and when users pay them.
+---
+
+Blink determines deposit pricing based on the route used for the deposit.
+
+## What the user pays
+
+| Situation | What the user pays | Notes |
+|-----------|--------------------|-------|
+| Existing Blink user making a redeposit | Blink subsidizes the route fee | This keeps redeposits effectively fee-free from the user's perspective inside Blink. |
+| Guest deposit flow | The normal route fee | This is expected for guest deposit flows. |
+
+<Note>
+The guest deposit flow includes the standard fee for the selected route. For users who already have a Blink account, Blink subsidizes that fee on redeposits.
+</Note>
+
+## What route fees are made of
+
+There are three potential fee components that can affect a route:
+
+1. **Execution fees**: costs for execution and network gas on the origin and destination chains, including a flat execution fee.
+2. **Swap fees**: liquidity-provider and routing costs for cross-asset or cross-chain swaps.
+3. **Routing fees**: a basis-point fee that varies by route category and volume tier.
+
+## Fee reference
+
+The following reference rates apply to the routing fee component:
+
+| Volume tier | Same token bridge | Stablecoin swaps |
+|-------------|-------------------|------------------|
+| `< $10M` | `0.00%` | `0.01%` |
+| `$10M - $100M` | `0.00%` | `0.0066%` |
+| `$100M - $1B` | `0.00%` | `0.0033%` |
+
+Volume tiers above are trailing 30-day USD volume tiers.
+
+## What those categories mean
+
+- **Same token bridge**: same asset bridged with no swap, like USDC on Arbitrum to USDC on Base.
+- **Stablecoin swaps**: stablecoin routes between assets like USDC, USDT, DAI, USDe, and USDS.
+
+## Related docs
+
+- [Supported Networks and Wallets](/integration/supported-networks-and-wallets)
+- [Architecture Overview](/integration/architecture)

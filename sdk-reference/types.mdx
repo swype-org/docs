@@ -71,12 +71,16 @@ interface DepositRequest {
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `amount` | `number` | Yes | USD amount to deposit. Must be > 0. |
-| `chainId` | `number` | Yes | EVM chain ID for the destination (e.g., `8453` for Base). |
-| `address` | `string` | Yes | Destination wallet address (0x-prefixed, 40 hex chars). |
-| `token` | `string` | Yes | Token contract address on the destination chain (0x-prefixed hex). |
+| `chainId` | `number` | Yes | Destination chain ID (for example, `8453` for Base or `792703809` for Solana). |
+| `address` | `string` | Yes | Destination wallet address. In the web SDK this can be an EVM address or a Solana address, depending on the destination chain. |
+| `token` | `string` | Yes | Destination token identifier. Use an EVM token contract address on EVM chains or an SPL mint address on Solana. |
 | `callbackScheme` | `string \| null` | No | Custom URL scheme for native app deep-link callbacks. Always `null` for browser. |
 | `reference` | `string` | No | Merchant order or invoice ID for reconciliation. |
 | `metadata` | `Record<string, string>` | No | Arbitrary key-value pairs forwarded to the signer. |
+
+<Info>
+Choose `chainId` and `token` from Blink's active routing catalog. See [Supported Networks and Wallets](/integration/supported-networks-and-wallets) for the current support matrix and fee behavior.
+</Info>
 
 ## DepositResult
 
@@ -136,9 +140,9 @@ interface SignerRequest {
 | Field | Type | Description |
 |-------|------|-------------|
 | `amount` | `number` | USD amount to deposit. |
-| `chainId` | `number` | EVM chain ID for the destination. |
+| `chainId` | `number` | Destination chain ID. |
 | `address` | `string` | Destination wallet address. |
-| `token` | `string` | Token contract address on the destination chain. |
+| `token` | `string` | Destination token identifier for that chain. |
 | `callbackScheme` | `string \| null` | `null` for browser integrations. |
 | `url` | `string` | Base webview URL. Provided for logging/validation only. |
 | `version` | `'v1'` | Protocol version. |
