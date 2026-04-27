@@ -24,8 +24,9 @@ class DepositError extends Error {
 
 | Code | Meaning | User-facing message |
 |------|---------|---------------------|
+| `DEPOSIT_DISMISSED` | User dismissed the deposit flow before completing the payment. | "The deposit was dismissed before the transfer completed." |
 | `BROWSER_FAILED` | Failed to open the in-app browser (e.g. `openUrl` threw an error). | "Unable to open the payment browser. Please try again." |
-| `BROWSER_DISMISSED` | User dismissed the in-app browser before completing the payment. | "The payment browser was closed before the transfer completed." |
+| `BROWSER_DISMISSED` | Deprecated alias for `DEPOSIT_DISMISSED`. | "The deposit was dismissed before the transfer completed." |
 | `DEEP_LINK_INVALID` | The callback deep link was malformed or missing required parameters. | "The payment callback was malformed. Please try again." |
 
 ### Shared codes (same as web SDK)
@@ -71,8 +72,11 @@ try {
   if (!(err instanceof DepositError)) throw err;
 
   switch (err.code) {
-    case 'BROWSER_DISMISSED':
+    case 'DEPOSIT_DISMISSED':
       // User intentionally closed, no action needed
+      break;
+    case 'BROWSER_DISMISSED':
+      // Deprecated alias for DEPOSIT_DISMISSED
       break;
     case 'BROWSER_FAILED':
       // Could not open browser, prompt retry or show fallback
@@ -108,7 +112,9 @@ The union of all mobile error code strings:
 
 ```typescript
 type DepositMobileErrorCode =
+  | 'DEPOSIT_DISMISSED'
   | 'BROWSER_FAILED'
+  /** @deprecated Use 'DEPOSIT_DISMISSED' instead. */
   | 'BROWSER_DISMISSED'
   | 'DEEP_LINK_INVALID'
   | 'SIGNER_REQUEST_FAILED'

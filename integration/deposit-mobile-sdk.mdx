@@ -94,7 +94,7 @@ function DepositButton() {
 }
 ```
 
-The hook returns reactive `status`, `result`, `error`, `displayMessage`, and `isActive` values, plus `requestDeposit`, `handleDeepLink`, and `close` actions. It manages the `MobileDeposit` lifecycle and cleans up on unmount.
+The hook returns reactive `status`, `result`, `error`, `displayMessage`, and `isActive` values, plus `requestDeposit`, `handleDeepLink`, `focus`, and `close` actions. It manages the `MobileDeposit` lifecycle and cleans up on unmount.
 
 ## Deep link setup
 
@@ -172,8 +172,8 @@ const deposit = new MobileDeposit({
   // Required: function that opens a URL in an in-app browser
   openUrl: (url) => WebBrowser.openBrowserAsync(url).then(() => {}),
 
-  // Base URL of the hosted payment app. Default: 'https://pay-staging.blink.cash'
-  webviewBaseUrl: 'https://pay-staging.blink.cash',
+  // Base URL of the hosted payment app. Default: 'https://pay.blink.cash'
+  webviewBaseUrl: 'https://pay.blink.cash',
 
   // Path for the callback deep link. Default: '/swype/callback'
   callbackPath: '/swype/callback',
@@ -269,8 +269,11 @@ The mobile SDK shares `DepositRequest`, `DepositResult`, `TransferSummary`, `Sig
 ## Lifecycle
 
 ```typescript
-// Cancel the current flow and reset to idle
+// Cancel the current flow
 deposit.close();
+
+// No-op retained for API compatibility with @swype-org/deposit
+deposit.focus();
 
 // Tear down and release all resources (call on unmount)
 deposit.destroy();
