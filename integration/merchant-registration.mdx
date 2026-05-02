@@ -1,14 +1,17 @@
 ---
 title: Register Your Merchant Account
-description: Send your public key to Blink and receive your merchant ID.
+description: Submit a self-serve application to reserve your merchant ID and activate signed payment links.
 ---
 
-After [generating your key pair](/integration/key-generation), send your **public key PEM** to Blink to register as a merchant.
+After [generating your key pair](/integration/key-generation), submit a self-serve application to Blink. The application endpoint reserves a `merchantId` for you immediately so you can wire it into your signer and start testing. The reserved ID stays inert until a Blink operator manually reviews and approves your submission, at which point it becomes a fully active merchant in the registry.
 
-## Register with Blink
+<Info>
+You can begin wiring `merchantId` into your signer right away. Signed payloads will fail verification with `MERCHANT_NOT_REGISTERED` until approval lands.
+</Info>
 
-To register, send your **public key PEM** and merchant details to the Blink team. Once reviewed, they will provision your `merchantId`.
+## Submit your application
 
+<<<<<<< HEAD
 <CardGroup cols={2}>
   <Card title="Email us" icon="envelope" href="mailto:s@blink.cash">
     Send your public key and merchant details to **s@blink.cash**
@@ -17,26 +20,83 @@ To register, send your **public key PEM** and merchant details to the Blink team
     Schedule a call with the Blink team to get set up.
   </Card>
 </CardGroup>
+=======
+`POST https://api.swype.network/v1/merchants/applications`
+
+```bash
+curl -X POST https://api.swype.network/v1/merchants/applications \
+  -H 'Content-Type: application/json' \
+  -d @- <<'JSON'
+{
+  "email": "founder@coolapp.com",
+  "domain": "coolapp.com",
+  "publicKey": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...\n-----END PUBLIC KEY-----\n",
+  "telegram": "@cooldev",
+  "description": "Cool App is a mobile-first crypto rewards platform that lets users top up their game balance via Swype."
+}
+JSON
+```
+
+Successful response (`202 Accepted`):
+
+```json
+{
+  "applicationId": "11112222-3333-4444-5555-666677778888",
+  "merchantId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "status": "PENDING",
+  "message": "Application received. Your merchantId is reserved and will activate after a Swype operator reviews and approves your submission."
+}
+```
+
+## Request fields
+
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `email` | `string` | Yes | RFC 5322 email, max 255 chars. Used by Blink to follow up. |
+| `domain` | `string` | Yes | Hostname (for example, `coolapp.com`), max 255 chars. Defaults to the merchant's display name on approval. |
+| `publicKey` | `string` | Yes | PEM-encoded ECDSA P-256 public key from [Key Generation](/integration/key-generation). Max 4096 chars. |
+| `telegram` | `string` | No | Optional Telegram handle (`@user` or `user`), 3–64 alphanumeric or underscore chars. |
+| `description` | `string` | Yes | 20–1000 chars describing your product and how you intend to use Blink. |
+
+## Response codes
+
+| Code | Meaning |
+|------|---------|
+| `202` | Application received. Operator review pending. |
+| `400` | Validation error in the request body (bad email, malformed PEM, etc.). |
+| `409 MERCHANT_APPLICATION_DUPLICATE` | A pending application with the same public key already exists. Wait for review or generate a new key pair before re-submitting. |
+| `429 RATE_LIMITED` | Too many submissions from your IP. Try again after the `Retry-After` window. |
+
+## What happens next
+
+<Steps>
+  <Step title="Review">
+    The Blink team is notified immediately and reviews your application.
+  </Step>
+  <Step title="Approval">
+    Once approved, your `merchantId` becomes valid for signed payment links.
+  </Step>
+  <Step title="Confirmation">
+    You'll receive a confirmation out-of-band (email or Telegram) when approval lands.
+  </Step>
+</Steps>
+>>>>>>> bbc5ad8 (add prompt)
 
 ## What Blink registers
 
 | Field | Value |
 |-------|-------|
-| `merchantId` | Your unique UUID (assigned by Blink) |
-| `displayName` | Your merchant display name |
+| `merchantId` | Your reserved UUID (returned in the `202` response) |
+| `displayName` | Defaults to your `domain`, editable on approval |
 | `algorithm` | `ECDSA_P256_SHA256` |
-| `status` | `ACTIVE` |
-| `publicKey` | Your PEM-encoded public key |
+| `status` | `PENDING` until reviewed, then `ACTIVE` |
+| `publicKey` | The PEM you submitted |
 
-Once registered, Blink's hosted flow verifies every signed payment link your signer produces by fetching your public key from the API (`GET /v1/merchants/{id}/public-key`).
-
-## What you receive
-
-After registration, Blink provides your `merchantId`, a UUID you will configure in your signer endpoint. This ID is included in every `SignerResponse` so Blink knows which public key to use for verification.
+Once active, Blink's hosted flow verifies every signed payment link your signer produces by fetching your public key from the API (`GET /v1/merchants/{id}/public-key`).
 
 ## Key rotation
 
-Your public key can be updated by contacting Blink. When rotating keys:
+Public key rotation after approval is handled by contacting Blink directly.
 
 <Steps>
   <Step title="Generate a new key pair">
