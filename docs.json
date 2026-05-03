@@ -48,6 +48,7 @@
             "pages": [
               "integration/architecture",
               "integration/supported-networks-and-wallets",
+              "integration/fiat-deposits-and-kyc",
               "integration/fees",
               "integration/key-generation",
               "integration/merchant-registration",

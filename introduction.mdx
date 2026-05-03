@@ -5,23 +5,19 @@ description: Documentation, integration guides, and SDK reference
 
 ## Welcome to Blink!
 
-Blink is a hosted deposit flow for crypto apps. Your app opens a secure modal iframe powered by Blink, and users complete crypto and fiat deposits in seconds without ever leaving your site.
+Blink is a hosted deposit flow for crypto apps. Your app opens a secure modal iframe powered by Blink, and users complete crypto and fiat deposits without ever leaving your site.
 
 There is nothing to PCI-scope, no wallet UI to build, and no on-chain logic to manage. Blink handles user authentication, wallet connection, on-chain transfers, and cross-chain bridging.
 
 Blink drops into your existing deposit stack as an additional funding option. You do not need to replace anything you already have. Add a single button alongside your current payment methods and Blink handles the rest.
-
-<Frame>
-  <img src="/images/blink-embedded-example.png" alt="Blink deposit button embedded in a live app" />
-</Frame>
-
-<p align="center"><em>Blink embedded as a one-tap deposit option on <a href="https://www.metals.lol/">metals.lol</a></em></p>
 
 Both **web** and **mobile** SDKs are available. The web SDK renders the deposit flow in a modal iframe overlay. The mobile SDK opens the same hosted flow in an in-app browser and returns the result via a deep link callback.
 
 These docs cover everything from generating your key pair to shipping a production deposit integration.
 
 If you need the current support matrix for wallets, source chains, destination chains, tokens, and guest-versus-redeposit fees, see [Supported Networks and Wallets](/integration/supported-networks-and-wallets).
+
+For fiat rollout details, including payment methods and KYC threshold behavior, see [Fiat deposits and KYC](/integration/fiat-deposits-and-kyc).
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">

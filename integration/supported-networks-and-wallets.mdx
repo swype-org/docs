@@ -3,29 +3,305 @@ title: Supported Networks and Wallets
 description: Current Blink support for connected wallets, source chains, destination chains, tokens, and deposit fee behavior.
 ---
 
-Use this page as the canonical allowlist for Blink deposits when wiring `chainId`, `address`, and `token` into your web Deposit SDK integration and signer endpoint.
+Use this page as the canonical destination support matrix for Blink deposits.
 
 <Info>
-Use the values on this page when validating deposit destinations in your signer and when choosing supported routes in your app UI.
+Blink supports broad destination routing coverage across EVM and non-EVM chains.
 </Info>
 
-## Connected wallets
+## Chains, tokens, contracts
 
-These are the wallet providers currently wired into Blink for source-wallet connection:
+### Supported chains
+
+### Mainnets
+
+| Chain | Chain ID | Supported tokens |
+|-------|----------|------------------|
+| Abstract | `2741` | `All` |
+| Ancient8 | `888888888` | `Limited` |
+| Animechain | `69000` | `Limited` |
+| ApeChain | `33139` | `All` |
+| Arbitrum | `42161` | `All` |
+| Arbitrum Nova | `42170` | `All` |
+| Avalanche | `43114` | `All` |
+| B3 | `8333` | `Limited` |
+| Base | `8453` | `All` |
+| Berachain | `80094` | `All` |
+| Bitcoin | `8253038` | `Limited` |
+| Blast | `81457` | `All` |
+| BNB | `56` | `All` |
+| BOB | `60808` | `Limited` |
+| Boba Network | `288` | `All` |
+| Celo | `42220` | `All` |
+| Corn | `21000000` | `All` |
+| Cronos | `25` | `All` |
+| Cyber | `7560` | `All` |
+| Degen | `666666666` | `Limited` |
+| Doma | `97477` | `All` |
+| Eclipse | `9286185` | `Limited` |
+| Ethereal | `5064014` | `Limited` |
+| Ethereum | `1` | `All` |
+| Flow EVM | `747` | `All` |
+| Gensyn | `685689` | `All` |
+| Gnosis | `100` | `All` |
+| Gunz | `43419` | `Limited` |
+| Hemi | `43111` | `All` |
+| HyperEVM | `999` | `All` |
+| Hyperliquid | `1337` | `All` |
+| Ink | `57073` | `All` |
+| Katana | `747474` | `All` |
+| Lighter | `3586256` | `All` |
+| Linea | `59144` | `All` |
+| Lisk | `1135` | `Limited` |
+| Manta Pacific | `169` | `All` |
+| Mantle | `5000` | `All` |
+| MegaETH | `4326` | `All` |
+| Metis | `1088` | `All` |
+| Mode | `34443` | `All` |
+| Monad | `143` | `All` |
+| Morph | `2818` | `Limited` |
+| Mythos | `42018` | `Limited` |
+| Optimism | `10` | `All` |
+| Perennial | `1424` | `Limited` |
+| Plasma | `9745` | `All` |
+| Plume | `98866` | `All` |
+| Polygon | `137` | `All` |
+| RARI | `1380012617` | `All` |
+| Redstone | `690` | `All` |
+| Ronin | `2020` | `All` |
+| Scroll | `534352` | `All` |
+| Sei | `1329` | `Limited` |
+| Shape | `360` | `All` |
+| Solana | `792703809` | `All` |
+| Somnia | `5031` | `Limited` |
+| Soneium | `1868` | `All` |
+| Sonic | `146` | `All` |
+| Soon | `9286186` | `Limited` |
+| Stable | `988` | `Limited` |
+| Story | `1514` | `All` |
+| Superposition | `55244` | `Limited` |
+| Superseed | `5330` | `Limited` |
+| SwellChain | `1923` | `Limited` |
+| Syndicate Commons | `510003` | `Limited` |
+| Taiko | `167000` | `All` |
+| Tempo | `4217` | `All` |
+| Tron | `728126428` | `Limited` |
+| Unichain | `130` | `All` |
+| World Chain | `480` | `All` |
+| ZERO | `543210` | `All` |
+| Zircuit | `48900` | `Limited` |
+| zkSync Era | `324` | `All` |
+| Zora | `7777777` | `All` |
+
+### Testnets
+
+| Chain | Chain ID | Supported tokens |
+|-------|----------|------------------|
+| Base Sepolia | `84532` | `All` |
+| Hyperliquid Testnet | `1337` | `All` |
+| Sepolia | `11155111` | `All` |
+| Tempo Testnet | `42431` | `Limited` |
+
+### Supported tokens and routes
+
+Relay currently supports multiple cross-chain routes across 69+ blockchain networks. This guide explains how to determine if a particular route and token pair is supported.
+
+### Solver currencies and swap support
+
+| Chain name | Solver currencies (supported natively) | Swaps supported | Gas top up supported |
+|------------|-----------------------------------------|-----------------|----------------------|
+| Ethereum | `ETH`, `USDC`, `USDT`, `ANIME`, `SIPHER`, `WETH`, `SYND`, `USDe`, `APE`, `PLUME`, `WBTC`, `mUSD`, `DAI`, `PYUSD` | `true` | `true` |
+| Base | `ETH`, `USDC`, `USDT`, `cbBTC`, `WETH`, `DEGEN`, `SYND`, `WBTC`, `SOL` | `true` | `true` |
+| Arbitrum | `ETH`, `USDC`, `USDT`, `WETH`, `ANIME`, `APE`, `WBTC` | `true` | `true` |
+| Optimism | `ETH`, `USDC`, `USDT`, `WETH` | `true` | `true` |
+| BNB | `USDC`, `USDT`, `SOMI`, `WBTC`, `USDe`, `BNB` | `true` | `true` |
+| Polygon | `USDC`, `USDT`, `USDC.e`, `WBTC` | `true` | `true` |
+| Solana | `USDC`, `USDT`, `PENGU`, `CASH`, `PYUSD`, `SOL` | `true` | `false` |
+| Abstract | `ETH`, `USDC`, `PENGU` | `true` | `true` |
+| Ancient8 | `ETH` | `false` | `true` |
+| Animechain | `USDC`, `ANIME` | `false` | `true` |
+| ApeChain | `ApeETH`, `APE` | `true` | `true` |
+| Arbitrum Nova | `ETH` | `true` | `true` |
+| Avalanche | `USDC`, `GUN`, `USDe` | `true` | `true` |
+| B3 | `ETH`, `USDC` | `false` | `true` |
+| Berachain | `USDC`, `WETH` | `true` | `true` |
+| Bitcoin | `BTC` | `false` | `false` |
+| Blast | `ETH`, `WETH` | `true` | `true` |
+| BOB | `ETH` | `false` | `true` |
+| Boba Network | `ETH` | `true` | `true` |
+| Celo | `USDC` | `true` | `true` |
+| Corn | `USDC`, `WBTCN` | `true` | `true` |
+| Cronos | `USDC`, `CRO` | `true` | `true` |
+| Cyber | `ETH` | `true` | `true` |
+| Degen | `DEGEN` | `false` | `true` |
+| Doma | `ETH`, `USDC.e` | `true` | `true` |
+| Eclipse | `ETH` | `false` | `false` |
+| Ethereal | `USDe` | `false` | `true` |
+| Flow EVM | `USDC`, `FLOW` | `true` | `true` |
+| Gensyn | `ETH`, `USDC` | `true` | `true` |
+| Gnosis | `USDC`, `xDAI` | `true` | `true` |
+| Gunz | `GUN` | `false` | `true` |
+| Hemi | `ETH` | `true` | `true` |
+| HyperEVM | `USDC`, `USD₮0`, `USDe`, `USDH`, `HYPE` | `true` | `true` |
+| Hyperliquid | `USDC`, `USDe`, `USDH` | `true` | `false` |
+| Ink | `ETH`, `USDC` | `true` | `true` |
+| Katana | `ETH`, `USDC`, `USDT`, `WBTC` | `true` | `true` |
+| Lighter | `ETH (Spot)`, `USDC (Perp)` | `true` | `false` |
+| Linea | `ETH`, `USDC`, `mUSD` | `true` | `true` |
+| Lisk | `ETH` | `false` | `true` |
+| Manta Pacific | `ETH` | `true` | `true` |
+| Mantle | `USDC` | `true` | `true` |
+| MegaETH | `ETH`, `USDT`, `USDm` | `true` | `true` |
+| Metis | `WETH` | `true` | `true` |
+| Mode | `ETH` | `true` | `true` |
+| Monad | `USDC`, `MON` | `true` | `true` |
+| Morph | `ETH` | `false` | `true` |
+| Mythos | `ETH`, `USDC.e` | `false` | `true` |
+| Perennial | `ETH`, `USDC` | `false` | `true` |
+| Plasma | `USD₮0`, `XPL` | `true` | `true` |
+| Plume | `USDC`, `WETH`, `pUSD`, `PLUME` | `true` | `true` |
+| RARI | `ETH` | `true` | `true` |
+| Redstone | `ETH` | `true` | `true` |
+| Ronin | `USDC`, `RON` | `true` | `true` |
+| Scroll | `ETH` | `true` | `true` |
+| Sei | `USDC`, `USDT0` | `false` | `false` |
+| Shape | `ETH` | `true` | `true` |
+| Somnia | `SOMI` | `false` | `true` |
+| Soneium | `ETH`, `USDC.e` | `true` | `true` |
+| Sonic | `USDC` | `true` | `true` |
+| Soon | `ETH`, `USDC`, `USDT` | `false` | `false` |
+| Stable | `USDT0` | `false` | `false` |
+| Story | `USDC`, `WETH` | `true` | `true` |
+| Superposition | `ETH` | `false` | `true` |
+| Superseed | `ETH` | `false` | `true` |
+| SwellChain | `ETH` | `false` | `true` |
+| Syndicate Commons | `SYND` | `false` | `true` |
+| Taiko | `ETH` | `true` | `true` |
+| Tempo | `USDC` | `true` | `true` |
+| Tron | `USDT` | `false` | `false` |
+| Unichain | `ETH`, `USDC` | `true` | `true` |
+| World Chain | `ETH`, `USDC` | `true` | `true` |
+| ZERO | `ETH`, `USDC` | `true` | `true` |
+| Zircuit | `ETH` | `false` | `true` |
+| zkSync Era | `ETH` | `true` | `true` |
+| Zora | `ETH`, `USDzC` | `true` | `true` |
+
+## How to check if a route is supported
+
+To determine whether a token route is supported for bridging, query the Chains API:
+
+```bash
+curl -X GET "https://api.relay.link/chains"
+```
+
+The response includes chain-level `tokenSupport` and token metadata under `erc20Currencies` and `currency`.
+
+### Step 1: Check token support level
+
+Check the `tokenSupport` field for a chain:
+
+- If `tokenSupport` is `"All"`, routes can be supported when liquidity is available.
+- If `tokenSupport` is `"Limited"`, continue to step 2.
+
+### Step 2: Check individual token support
+
+If `tokenSupport` is `"Limited"`, inspect `erc20Currencies` and `currency` for token entries.
+
+### Step 3: Verify bridging support
+
+Confirm `supportsBridging` for the token:
+
+- If `supportsBridging` is `true`, the token route is supported.
+- If `supportsBridging` is `false` or missing from token lists, treat the route as unsupported.
+
+## Example: All tokens supported
+
+```json
+{
+  "chains": [
+    {
+      "id": 10,
+      "name": "optimism",
+      "displayName": "Optimism",
+      "tokenSupport": "All",
+      "currency": {
+        "id": "eth",
+        "symbol": "ETH",
+        "name": "Ether",
+        "address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "supportsBridging": true
+      },
+      "erc20Currencies": [
+        {
+          "id": "usdc",
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "address": "0x0b2c639c533813f4aa9d7837caf62653d097ff85",
+          "decimals": 6,
+          "supportsBridging": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Example: Limited token support
+
+```json
+{
+  "chains": [
+    {
+      "id": 7777777,
+      "name": "zora",
+      "displayName": "Zora",
+      "tokenSupport": "Limited",
+      "currency": {
+        "id": "eth",
+        "symbol": "ETH",
+        "name": "Ether",
+        "address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "supportsBridging": true
+      },
+      "erc20Currencies": [
+        {
+          "id": "usdc",
+          "symbol": "USDzC",
+          "name": "USD Coin (Bridged from Ethereum)",
+          "address": "0xcccccccc7021b32ebb4e8c08314bd62f7c653ec4",
+          "decimals": 6,
+          "supportsBridging": true
+        }
+      ]
+    }
+  ]
+}
+```
+
+## Gas top-up
+
+Gas top-up support is shown in the solver table above and depends on destination chain and route conditions.
+
+## API reference
+
+For the most up-to-date support data, always refer to the Chains API endpoint.
+
+## Source wallet support in Blink SDK
+
+Source-wallet connection in Blink SDK currently supports:
 
 | Wallet | Supported source chains |
 |--------|-------------------------|
 | MetaMask | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
 | Coinbase Wallet | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
 | Trust Wallet | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
+| OKX Wallet | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
+| Phantom | Solana, Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain (via Phantom EVM accounts) |
+| Rabby | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
 
-<Note>
-Wallet support here refers to source-wallet connection for deposit routing. Destination support is chain-and-token based and is listed below.
-</Note>
-
-## Source chains and tokens
-
-These are the currently supported source-chain stablecoins Blink can route from:
+### Source stablecoins
 
 | Source chain | Chain ID | Supported tokens |
 |--------------|----------|------------------|
@@ -35,87 +311,4 @@ These are the currently supported source-chain stablecoins Blink can route from:
 | Polygon | `137` | `USDC.e`, `USDC`, `USDT` |
 | BNB Smart Chain | `56` | `USDC`, `USDT` |
 
-<Tip>
-Polygon `USDC.e` remains supported today alongside Polygon native `USDC`.
-</Tip>
-
-## Destination chains and tokens
-
-These are the currently supported destination routes for Blink deposits:
-
-| Destination chain | Chain ID | Supported tokens | Notes |
-|-------------------|----------|------------------|-------|
-| Ethereum Mainnet | `1` | `USDC`, `USDT` | Can be used as a destination. |
-| Base | `8453` | `USDC`, `USDT` | Can be used as a destination. |
-| Arbitrum One | `42161` | `USDC`, `USDT` | Can be used as a destination. |
-| Polygon | `137` | `USDC.e`, `USDC`, `USDT` | Can be used as a destination. |
-| BNB Smart Chain | `56` | `USDC`, `USDT` | Can be used as a destination. |
-| Solana | `792703809` | `USDC` | Destination-only today. Use the SPL mint address for `token`. |
-| Hyperliquid | `999` | `USDC` | Destination-only today. |
-| Hyperliquid L1 | `1337` | `USDC` | Destination-only today. |
-
-<Info>
-Solana is currently supported as a destination-only route. For Solana destinations, use the destination wallet's Solana address and the SPL mint address for the selected token.
-</Info>
-
-## Destination parameter format
-
-When you call `requestDeposit()` in the web SDK:
-
-- `chainId` should be the destination chain ID from the tables above.
-- `address` should be the destination wallet address for that chain.
-- `token` should be the token contract address on EVM chains or the SPL mint address on Solana.
-
-Examples:
-
-```typescript
-// Base USDC destination
-{
-  chainId: 8453,
-  token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
-}
-
-// Solana USDC destination
-{
-  chainId: 792703809,
-  token: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v',
-}
-```
-
-## FAQ
-
-### Is Polygon `USDC.e` currently available?
-
-Yes. Polygon `USDC.e` is still supported today, alongside Polygon native `USDC` and `USDT`.
-
-### Is Solana `USDC` available for deposit paths?
-
-Yes. Solana `USDC` is supported as a destination today.
-
-### If I deposit `1 USDC` on Base into a Solana wallet with `USDC` as the destination, should I receive `1 USDC` on Solana?
-
-Treat the destination amount as quote-based. Blink fixes the source input amount and routes the transfer using a live Relay quote, so the docs should not promise an exact `1:1` destination amount on every cross-chain route.
-
-See [Fees](/integration/fees) for how Blink handles redeposit subsidy versus guest checkout fees.
-
-### What wallets are supported?
-
-Blink currently supports MetaMask, Coinbase Wallet, and Trust Wallet for source-wallet connection on supported EVM source chains.
-
-### What chains are supported?
-
-Source-capable chains today are Ethereum Mainnet, Base, Arbitrum One, Polygon, and BNB Smart Chain.
-
-Destination support includes those networks plus destination-only routes for Solana, Hyperliquid, and Hyperliquid L1.
-
-### What tokens are supported?
-
-Blink currently supports `USDC` and `USDT` across the seeded EVM routes, plus Polygon `USDC.e`, plus Solana `USDC`.
-
-## Signer guidance
-
-Your signer should allowlist only the destination `chainId` and `token` combinations Blink currently supports. This prevents invalid destination requests from being signed and keeps your integration aligned with Blink's active routing catalog.
-
-<Info>
-If you also expose available routes in your own product UI, keep that UI in sync with this same allowlist so users only see destinations Blink can currently settle.
-</Info>
+If you need support for additional source connectivity paths, contact Blink.

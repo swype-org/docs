@@ -1,0 +1,110 @@
+---
+title: Fiat deposits and KYC
+description: Payment method coverage, KYC thresholds, and rollout guidance for Blink fiat deposits.
+---
+
+Use this page to understand Blink's fiat deposit coverage and compliance flow.
+
+## Payment methods
+
+Blink is expanding fiat checkout to support:
+
+- Debit card
+- Credit card (Visa, Mastercard)
+- Apple Pay
+- Google Pay
+- Venmo
+- PayPal
+- Revolut
+- SEPA Instant
+
+<Note>
+Availability can vary by merchant account, region, and payment provider readiness.
+</Note>
+
+## KYC reliance
+
+Blink supports KYC reliance, so verified users can move through fiat checkout with minimal repeated verification.
+
+### Why this matters
+
+Without KYC reliance, users often face:
+
+- Repeated document upload flows
+- Slower onboarding to first deposit
+- Higher friction and drop-off
+- Lower conversion from intent to funded wallet
+
+### How Blink KYC reliance works
+
+1. Your app opens the Blink deposit session.
+2. Blink handles the required identity verification flow directly in checkout.
+3. Blink completes KYC checks when required by amount, route, and compliance rules.
+4. Blink finalizes the fiat deposit and funds the destination wallet.
+5. Your app receives the funded-user outcome without running a separate KYC flow.
+
+<Info>
+KYC is completed once per user with Blink. If a user already passed Blink KYC in another app, they typically do not need to complete full KYC again in your app.
+</Info>
+
+### Integration notes
+
+- No separate KYC provider integration is required in your app.
+- Keep your deposit trigger and destination parameters server-validated.
+- Handle completion and error events so users can retry failed deposits cleanly.
+- Use Blink status and webhook data for reconciliation in your backend.
+
+## Supported countries
+
+Blink supports `136+` cryptocurrencies across `45+` blockchains in `64+` countries.
+
+### Quick links
+
+- EURO Zone
+- North America
+- United States
+- Asia
+- South America
+- Oceania
+- Africa
+
+### Regional coverage
+
+| Region | Country/market | Code | Fiat currency |
+|--------|----------------|------|---------------|
+| EURO Zone | Euro Area | `EUZ` | `EUR` |
+| EURO Zone | United Kingdom | `GB` | `GBP` |
+| North America | Bermuda | `BM` | `BMD` |
+| North America | Canada | `CA` | `CAD` |
+| North America | Guadeloupe | `GP` | `EUR` |
+| North America | Martinique | `MQ` | `EUR` |
+| North America | Mexico | `MX` | `MXN` |
+| North America | Puerto Rico | `PR` | `USD` |
+| North America | Saint Martin | `MF` | `EUR` |
+| Asia | Cyprus | `CY` | `EUR` |
+| Asia | Georgia | `GE` | `GEL` |
+| Asia | Hong Kong | `HK` | `HKD` |
+| Asia | India | `IN` | `INR` (temporarily suspended) |
+| Asia | Israel | `IL` | `ILS` |
+| Asia | Kuwait | `KW` | `KWD` |
+| Asia | Malaysia | `MY` | `MYR` |
+| Asia | Philippines | `PH` | `PHP` |
+| South America | Brazil | `BR` | `BRL` |
+| South America | French Guiana | `GF` | `EUR` |
+| Oceania | Australia | `AU` | `AUD` |
+| Oceania | Guam | `GU` | `USD` |
+| Oceania | New Zealand | `NZ` | `NZD` |
+| Africa | Mayotte | `YT` | `EUR` |
+| Africa | Reunion | `RE` | `EUR` |
+
+### United States coverage
+
+Blink on-ramp is supported across most US states and territories, including:
+
+`Alabama`, `Arizona`, `Arkansas`, `California`, `Colorado`, `Connecticut`, `Delaware`, `District of Columbia`, `Florida`, `Georgia`, `Hawaii`, `Idaho`, `Illinois`, `Indiana`, `Iowa`, `Kansas`, `Kentucky`, `Maine`, `Maryland`, `Massachusetts`, `Michigan`, `Mississippi`, `Missouri`, `Montana`, `Nebraska`, `Nevada`, `New Hampshire`, `New Jersey`, `New Mexico`, `North Carolina`, `Ohio`, `Oklahoma`, `Oregon`, `Pennsylvania`, `Puerto Rico`, `Rhode Island`, `South Carolina`, `South Dakota`, `Tennessee`, `Texas`, `Utah`, `Vermont`, `Virginia`, `Washington`, `West Virginia`, `Wisconsin`, `Wyoming`.
+
+<Note>
+Available payment rails and off-ramp methods can vary by country, user profile, and compliance requirements.
+</Note>
+
+If you need a specific launch market or payment rail enabled first, contact Blink and we can prioritize your rollout.
