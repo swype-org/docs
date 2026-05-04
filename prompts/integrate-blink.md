@@ -1,4 +1,7 @@
-# Integrate Blink (Swype) deposits into this codebase
+---
+title: Integrate Blink end-to-end
+description: AI agent prompt for scaffolding a complete Blink integration into your codebase.
+---
 
 You are an AI coding agent. Your mission is to integrate Blink end-to-end into this project: a server-side signer endpoint, the appropriate client SDK, and a working deposit button. The full source of truth lives at `https://docs.blink.cash` — fetch the linked pages as you go and treat them as authoritative over anything you have memorised.
 
