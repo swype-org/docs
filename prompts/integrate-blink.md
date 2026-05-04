@@ -149,7 +149,7 @@ Read [Merchant Registration](https://docs.blink.cash/integration/merchant-regist
 3. **Show the user the exact request body and ask them to confirm before sending.** Do not submit unconfirmed applications — submissions are throttled and duplicates are rejected with `409 MERCHANT_APPLICATION_DUPLICATE`.
 4. Submit:
    ```bash
-   curl -X POST https://api.swype.network/v1/merchants/applications \
+   curl -X POST https://api.blink.cash/v1/merchants/applications \
      -H 'Content-Type: application/json' \
      -d @application.json
    ```
