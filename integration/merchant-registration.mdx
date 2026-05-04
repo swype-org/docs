@@ -8,32 +8,8 @@ After [generating your key pair](/integration/key-generation), submit a self-ser
 <Info>
 You can begin wiring `merchantId` into your signer right away. Signed payloads will fail verification with `MERCHANT_NOT_REGISTERED` until approval lands.
 </Info>
-
-## How to register
-
-Two paths, same outcome — pick whichever fits your team.
-
-<CardGroup cols={2}>
-  <Card title="Self-serve API" icon="bolt" href="#submit-your-application">
-    Submit a JSON application and get a reserved `merchantId` back in seconds. Best when you want to start wiring code immediately.
-  </Card>
-  <Card title="Talk to the team" icon="calendar" href="https://calendar.app.google/3fqK5VntM89fFXnJ9">
-    Book a meeting with the Blink team to walk through your use case and get set up. Best when you have integration questions or want a tailored kickoff.
-  </Card>
-</CardGroup>
-
 ## Submit your application
 
-<<<<<<< HEAD
-<CardGroup cols={2}>
-  <Card title="Email us" icon="envelope" href="mailto:s@blink.cash">
-    Send your public key and merchant details to **s@blink.cash**
-  </Card>
-  <Card title="Book a meeting" icon="calendar" href="https://calendar.app.google/3fqK5VntM89fFXnJ9">
-    Schedule a call with the Blink team to get set up.
-  </Card>
-</CardGroup>
-=======
 `POST https://api.swype.network/v1/merchants/applications`
 
 ```bash
@@ -93,7 +69,6 @@ Successful response (`202 Accepted`):
     You'll receive a confirmation out-of-band (email or Telegram) when approval lands.
   </Step>
 </Steps>
->>>>>>> bbc5ad8 (add prompt)
 
 ## What Blink registers
 
