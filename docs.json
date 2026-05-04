@@ -58,10 +58,6 @@
               "integration/testing",
               "integration/production-checklist"
             ]
-          },
-          {
-            "group": "Prompts",
-            "pages": ["prompts/integrate-blink"]
           }
         ]
       },
