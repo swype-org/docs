@@ -83,6 +83,15 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "AI Agent",
+        "groups": [
+          {
+            "group": "Integrate with an AI agent",
+            "pages": ["ai-agent"]
+          }
+        ]
       }
     ]
   },
