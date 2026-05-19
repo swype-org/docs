@@ -96,8 +96,8 @@
       {
         "tab": "Users",
         "pages": [
-          "untitled-page",
-          "setup"
+          "user-intro",
+          "user-setup"
         ]
       }
     ]
