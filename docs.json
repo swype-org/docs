@@ -92,6 +92,13 @@
             "pages": ["ai-agent"]
           }
         ]
+      },
+      {
+        "tab": "Users",
+        "pages": [
+          "untitled-page",
+          "setup"
+        ]
       }
     ]
   },
