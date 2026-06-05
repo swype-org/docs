@@ -3,21 +3,33 @@ title: Introduction
 description: Documentation, integration guides, and SDK reference
 ---
 
-## Welcome to Blink!
+## Welcome to Blink
 
-Blink is a hosted deposit flow for crypto apps. Your app opens a secure modal iframe powered by Blink, and users complete crypto and fiat deposits without ever leaving your site.
+**Blink is a deposit SDK for crypto apps.** It lets your users deposit crypto into your app with passkeys, instead of dealing with the friction of addresses, chains, or tokens.
 
-There is nothing to PCI-scope, no wallet UI to build, and no on-chain logic to manage. Blink handles user authentication, wallet connection, on-chain transfers, and cross-chain bridging.
+### It takes about 5 minutes to add
 
-Blink drops into your existing deposit stack as an additional funding option. You do not need to replace anything you already have. Add a single button alongside your current payment methods and Blink handles the rest.
+Drop in one button next to your existing payment methods. We handle the hard parts:
 
-Both **web** and **mobile** SDKs are available. The web SDK renders the deposit flow in a modal iframe overlay. The mobile SDK opens the same hosted flow in an in-app browser and returns the result via a deep link callback.
+- No wallet UI to build
+- No on-chain logic to write
+- Nothing to PCI-scope
 
-These docs cover everything from generating your key pair to shipping a production deposit integration.
+Behind the button, Blink handles authentication, wallet connection, on-chain transfers, and cross-chain bridging.
 
-If you need the current support matrix for wallets, source chains, destination chains, tokens, and guest-versus-redeposit fees, see [Supported Networks and Wallets](/integration/supported-networks-and-wallets).
+### Best for apps with embedded wallets
 
-For fiat rollout details, including payment methods and KYC threshold behavior, see [Fiat deposits and KYC](/integration/fiat-deposits-and-kyc).
+Prediction markets, trading apps, games, and AI agents. If your users need to get money in fast, Blink is the funding layer that gets them in.
+
+### Blink is not a wallet
+
+We work on top of wallet infrastructure like Privy, Turnkey, and Dynamic, and help your users fund those wallets in one tap. You don't replace anything you already have.
+
+### Web and mobile
+
+Both SDKs are available. Web renders the deposit flow in a modal iframe. Mobile opens the same flow in an in-app browser and returns the result through a deep link.
+
+For the current wallets, chains, tokens, and fees, see [Supported Networks and Wallets](/integration/supported-networks-and-wallets).
 
 ## Integrate with an AI agent
 
@@ -34,16 +46,16 @@ https://raw.githubusercontent.com/swype-org/docs/refs/heads/main/prompts/integra
   <Card title="Architecture" icon="diagram-project" href="/integration/architecture">
     Understand the full deposit flow, signer endpoint, and hosted UI lifecycle.
   </Card>
-  <Card title="Deposit SDK (Web)" icon="code" href="/sdk-reference/deposit-class">
+  <Card title="Deposit SDK for Web" icon="code" href="/sdk-reference/deposit-class">
     Integrate deposits into your web app with vanilla JS or React.
   </Card>
-  <Card title="Deposit SDK (Mobile)" icon="mobile" href="/sdk-reference/mobile-deposit-class">
+  <Card title="Deposit SDK for Mobile" icon="mobile" href="/sdk-reference/mobile-deposit-class">
     Open the hosted flow in an in-app browser with deep link callbacks.
   </Card>
   <Card title="Key Generation" icon="key" href="/integration/key-generation">
     Generate your ECDSA key pair and register your public key with Blink.
   </Card>
   <Card title="Testing" icon="flask" href="/integration/testing">
-    Validate your integration end-to-end in the sandbox environment.
+    Validate your integration end-to-end with a live deposit.
   </Card>
 </CardGroup>
