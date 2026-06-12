@@ -55,6 +55,7 @@
               "integration/deposit-sdk",
               "integration/deposit-mobile-sdk",
               "integration/testing",
+              "integration/testnet-sandbox",
               "integration/production-checklist"
             ]
           }
@@ -68,6 +69,7 @@
             "pages": [
               "sdk-reference/deposit-class",
               "sdk-reference/react-hook",
+              "sdk-reference/blink-deposit-button",
               "sdk-reference/types",
               "sdk-reference/errors",
               "sdk-reference/events"

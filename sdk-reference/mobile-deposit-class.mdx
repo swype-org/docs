@@ -24,7 +24,8 @@ Creates a new `MobileDeposit` instance. Throws a `DepositError` with code `INVAL
 | `signer` | `string \| SignerFunction` | **required** | URL string for the signer endpoint, or a custom async function. When a string, the SDK sends a `POST` with a JSON `SignerRequest` body. When a function, the SDK calls it with a `SignerRequest` and expects a `Promise<SignerResponse>`. |
 | `callbackScheme` | `string` | **required** | Custom URL scheme registered by the mobile app (e.g. `'myapp'`). The hosted flow redirects to `{callbackScheme}://swype/callback?...` on completion. |
 | `openUrl` | `(url: string) => Promise<void>` | **required** | Function that opens a URL in an in-app browser. Use `expo-web-browser`, `SFSafariViewController` (iOS), or `CustomTabsIntent` (Android). The returned promise should resolve when the browser is dismissed. |
-| `webviewBaseUrl` | `string` | `'https://pay.blink.cash'` | Base URL of the hosted payment webview app. |
+| `environment` | `'production' \| 'sandbox'` | `'production'` | Blink environment to target. `'sandbox'` points the hosted flow at the [testnet sandbox](/integration/testnet-sandbox) (`https://pay-sandbox.blink.cash`). An explicit `webviewBaseUrl` takes precedence. |
+| `webviewBaseUrl` | `string` | `'https://pay.blink.cash'` | Base URL of the hosted payment webview app. Overrides `environment` when set. |
 | `callbackPath` | `string` | `'/swype/callback'` | Path component of the callback deep link. |
 | `signerTimeoutMs` | `number` | `15000` | Maximum milliseconds to wait for the signer to respond. |
 | `flowTimeoutMs` | `number` | `undefined` (no limit) | Maximum milliseconds for the entire flow (signer + user completion). |

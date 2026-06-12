@@ -82,6 +82,39 @@ function TransferButton() {
 
 The hook returns reactive `status`, `result`, `error`, `displayMessage`, and `isActive` values, plus `requestDeposit`, `focus`, and `close` actions. It manages the `Deposit` lifecycle and cleans up on unmount.
 
+## Prebuilt deposit button
+
+You don't have to design your own button. The SDK ships `BlinkDepositButton`, a prebuilt Blink-branded button — a black pill with a "Deposit stablecoins / In a Blink" label and USDC/USDT coin marks. It is self-contained (inline styles, data-URI icons, no CSS imports) and fills the width of its container.
+
+```tsx
+import { BlinkDepositButton, useBlinkDeposit } from '@swype-org/deposit/react';
+
+function Checkout({ userWalletAddress }: { userWalletAddress: string }) {
+  const { status, error, displayMessage, requestDeposit } = useBlinkDeposit({
+    signer: '/api/sign-payment',
+  });
+
+  return (
+    <>
+      <BlinkDepositButton
+        onClick={() =>
+          requestDeposit({
+            amount: 50,
+            chainId: 8453,
+            address: userWalletAddress,
+            token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          })
+        }
+        loading={status === 'signer-loading'}
+      />
+      {error && <p className="error">{displayMessage}</p>}
+    </>
+  );
+}
+```
+
+The button is presentation-only — wire `onClick` to `requestDeposit` yourself, and pass `disabled` or `loading` to reflect your app's state. Its branding is intentionally fixed; if you need a custom look, keep building your own button as shown above. See the [BlinkDepositButton reference](/sdk-reference/blink-deposit-button) for the full props table.
+
 ## Configuration
 
 ```typescript
@@ -105,10 +138,21 @@ const deposit = new Deposit({
   // Max ms for entire flow (signer + user completion). No limit by default.
   flowTimeoutMs: 300_000,
 
+  // Allow the hosted flow to show the full widget (deposit address options
+  // alongside Blink one tap). Set to false to send users straight to the
+  // Blink one-tap flow. Default: true
+  enableFullWidget: true,
+
   // Enable debug logging. Default: false
   debug: false,
 });
 ```
+
+### Full widget vs. one tap
+
+By default the hosted flow can open with the **full widget** — a deposit options entry screen that offers deposit addresses (pay from an exchange or any wallet) alongside Blink's one-tap deposit. Set `enableFullWidget: false` to skip it and send every user straight to the Blink one-tap flow.
+
+The full widget only appears when **both** your SDK config and your Blink merchant account have it enabled. If it is disabled on your merchant account, the hosted flow stays in one-tap mode regardless of this option — contact Blink to change your account configuration.
 
 ## Custom signer function
 

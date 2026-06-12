@@ -43,11 +43,13 @@ Configuration for a `Deposit` instance. See [Deposit Class](/sdk-reference/depos
 ```typescript
 interface DepositConfig {
   signer: string | SignerFunction;
+  environment?: 'production' | 'sandbox';
   webviewBaseUrl?: string;
   hostedFlowOrigin?: string;
   containerElement?: HTMLElement;
   signerTimeoutMs?: number;
   flowTimeoutMs?: number;
+  enableFullWidget?: boolean;
   debug?: boolean;
 }
 ```

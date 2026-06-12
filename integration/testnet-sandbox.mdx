@@ -1,0 +1,99 @@
+---
+title: "Testnet Sandbox"
+description: "Build against Blink on testnet using the public sandbox environment."
+---
+
+The Blink sandbox is a fully separate environment that runs on testnet. It has its own API, hosted flow, and merchant registry, and settles deposits on Base Sepolia and Sepolia instead of mainnet. Use it when you want to develop without real funds — for example during a hackathon or early prototyping.
+
+<Note>
+Mainnet remains the recommended way to verify your integration. The sandbox runs on test networks with test liquidity, so it cannot prove production readiness. Before going live, complete the [Testing](/integration/testing) flow with a small real deposit and work through the [Production Checklist](/integration/production-checklist).
+</Note>
+
+## Sandbox endpoints
+
+| Surface | Production | Sandbox |
+|---------|------------|---------|
+| API | `https://api.blink.cash` | `https://api-sandbox.blink.cash` |
+| Hosted flow | `https://pay.blink.cash` | `https://pay-sandbox.blink.cash` |
+
+Sandbox and production share nothing: merchants, keys, and transfers in one environment do not exist in the other.
+
+## Enable sandbox mode in the SDK
+
+Pass `environment: 'sandbox'` when constructing the SDK. This points the hosted flow at `https://pay-sandbox.blink.cash`. An explicit `webviewBaseUrl` always takes precedence over `environment`.
+
+<CodeGroup>
+
+```typescript Web (@swype-org/deposit >= 0.3.17)
+import { Deposit } from '@swype-org/deposit';
+
+const deposit = new Deposit({
+  signer: '/api/sign-payment',
+  environment: 'sandbox',
+});
+```
+
+```typescript Mobile (@swype-org/deposit-mobile >= 1.0.3)
+import { MobileDeposit } from '@swype-org/deposit-mobile';
+
+const deposit = new MobileDeposit({
+  signer: 'https://api.yourapp.com/sign-payment',
+  callbackScheme: 'myapp',
+  environment: 'sandbox',
+  openUrl: (url) => WebBrowser.openBrowserAsync(url),
+});
+```
+
+</CodeGroup>
+
+## Register a sandbox merchant
+
+Sandbox merchants are registered with the same flow as production, but against the sandbox API. Generate a key pair following [Key Generation](/integration/key-generation) — use a dedicated key pair for sandbox, never your production key — and submit it to:
+
+```bash
+curl -X POST "https://api-sandbox.blink.cash/v1/merchants/applications" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "dev@yourapp.com",
+    "domain": "yourapp.com",
+    "publicKey": "-----BEGIN PUBLIC KEY-----\n...\n-----END PUBLIC KEY-----\n",
+    "description": "Testing our Blink integration on the sandbox before going live."
+  }'
+```
+
+Sandbox applications are approved automatically — the returned `merchantId` is active immediately, so you can wire it into your signer and start depositing right away.
+
+## Supported testnets
+
+| Chain | Chain ID | Supported tokens |
+|-------|----------|------------------|
+| Base Sepolia | `84532` | `USDC`, `ETH` |
+| Sepolia | `11155111` | `USDC`, `ETH` |
+
+Support differs by deposit method:
+
+- **One-tap deposits** (connected wallet): Base Sepolia and Sepolia only. Cross-chain routing between the two works — for example, depositing Sepolia USDC to a Base Sepolia destination.
+- **Manual transfers** (send from an exchange or wallet): same-chain deposits only, on Base Sepolia and Sepolia. Cross-chain manual transfers are not supported on testnet.
+
+There is no testnet USDT. Tether does not maintain official testnet deployments, so USDC stands in for all stablecoin flows in the sandbox — the integration surface is identical, and switching to mainnet USDT is a config change.
+
+<Warning>
+Sandbox deposits are significantly slower than mainnet. Testnet routing depends on test-network block times and solver liquidity, so expect completion times well beyond what you will see in production.
+</Warning>
+
+## Fund a test wallet
+
+- **Testnet USDC** — Circle's [testnet faucet](https://faucet.circle.com) supports both Base Sepolia and Sepolia.
+- **Gas (ETH)** — use the [Google Cloud faucet](https://cloud.google.com/application/web3/faucet/ethereum/sepolia) for Sepolia or the [Coinbase faucet](https://portal.cdp.coinbase.com/products/faucet) for Base Sepolia.
+
+## Differences from production
+
+| | Production | Sandbox |
+|---|------------|---------|
+| Networks | 60+ mainnets | Base Sepolia, Sepolia |
+| Funds | Real | Testnet (faucet) |
+| Merchant approval | Reviewed by Blink | Automatic |
+| One-tap deposits | All supported source chains, cross-chain | Base Sepolia and Sepolia, cross-chain |
+| Manual transfers | Cross-chain and same-chain | Same-chain only |
+| Speed | Seconds | Significantly slower |
+| USDT | Supported | Not available — use USDC |

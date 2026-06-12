@@ -87,6 +87,7 @@ These pages are the implementation reference. You don't have to fetch all of the
 
 - [`Deposit` class](https://docs.blink.cash/sdk-reference/deposit-class)
 - [React hook](https://docs.blink.cash/sdk-reference/react-hook)
+- [`BlinkDepositButton`](https://docs.blink.cash/sdk-reference/blink-deposit-button)
 - [Types](https://docs.blink.cash/sdk-reference/types)
 - [Errors](https://docs.blink.cash/sdk-reference/errors)
 - [Events](https://docs.blink.cash/sdk-reference/events)
@@ -168,7 +169,14 @@ Before reading `package.json` or running anything, ask the user the questions be
    - Secrets manager (preferred for production) — AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager, Doppler, 1Password Connect, etc.
    - `.env.local` for dev only — confirm it is git-ignored.
 
-8. **(Mobile only) URL scheme.** Read `app.json` (Expo) or `Info.plist` / `AndroidManifest.xml` (bare RN) first. If a scheme is already registered, propose using it. Otherwise ask (e.g. `myapp`). The scheme must match `MobileDeposit`'s `callbackScheme` exactly.
+8. **(Web only) Deposit button.** Ask whether the user wants:
+
+   - **Blink-provided button (default)** — render the prebuilt `BlinkDepositButton` from `@swype-org/deposit/react`: a Blink-branded black pill ("Deposit stablecoins / In a Blink" with USDC/USDT marks). Zero design work; hover, press, disabled, and loading states are built in. See [`BlinkDepositButton`](https://docs.blink.cash/sdk-reference/blink-deposit-button).
+   - **Their own button** — reuse or build a button in the app's own design system and wire it to `requestDeposit()`.
+
+   If the app already has a deposit/checkout button, point at it and ask whether to keep it or swap in the Blink-provided one.
+
+9. **(Mobile only) URL scheme.** Read `app.json` (Expo) or `Info.plist` / `AndroidManifest.xml` (bare RN) first. If a scheme is already registered, propose using it. Otherwise ask (e.g. `myapp`). The scheme must match `MobileDeposit`'s `callbackScheme` exactly.
 
 Once you have answers, summarise them back to the user in a short bullet list and confirm before moving to Phase 3.
 
@@ -249,15 +257,18 @@ Read [Deposit SDK](https://docs.blink.cash/integration/deposit-sdk) and the [`De
 Then:
 
 1. `npm install @swype-org/deposit` (or yarn / pnpm equivalent).
-2. Initialise the SDK with `signer: '<path from Phase 4>'` (e.g. `'/api/sign-payment'`).
-3. Wire `requestDeposit({ amount, chainId, address, token })` to a button click handler. Pull `address` from the wallet source picked in Phase 2 — for example:
+2. Initialise the SDK with `signer: '<path from Phase 4>'` (e.g. `'/api/sign-payment'`) **and** `merchantId: '<merchantId from Phase 3>'`. The `merchantId` is a public identifier — unlike the private key, it is safe in client code. Passing it lets the SDK's background preload prefetch the merchant config and signing key before the user ever clicks, so the deposit UI opens near-instantly; omitting it still works but adds avoidable latency to the first click. Construct the `Deposit` instance (or mount the React hook) when the page or component mounts — not lazily inside the click handler — so the preload has time to warm up.
+3. Render the deposit button per the Phase 2 choice:
+   - **Blink-provided** — import `BlinkDepositButton` from `@swype-org/deposit/react`, wire `onClick` to `requestDeposit(...)`, and pass `loading` while the signer call is in flight (e.g. `loading={status === 'signer-loading'}` with the React hook). Follow [`BlinkDepositButton`](https://docs.blink.cash/sdk-reference/blink-deposit-button).
+   - **User's own** — wire their existing or new button's click handler to `requestDeposit(...)`.
+4. Wire `requestDeposit({ amount, chainId, address, token })` to the button click handler. Pull `address` from the wallet source picked in Phase 2 — for example:
    - Privy: `const { wallets } = useWallets(); const address = wallets[0]?.address;`
    - wagmi: `const { address } = useAccount();`
    - Hardcoded: use the address the user provided in Phase 2.
-4. **`requestDeposit()` must run from a user-gesture handler** (button click, keypress). Browsers block iframe creation otherwise.
-5. Render `displayMessage` / `getDisplayMessage(err)` from [Errors](https://docs.blink.cash/sdk-reference/errors) on failure. Use the React hook's `error` field if you went the hook route.
-6. Call `deposit.destroy()` on component unmount or page unload (the React hook does this automatically).
-7. Confirm a viewport meta tag exists for mobile browsers: `<meta name="viewport" content="width=device-width, initial-scale=1.0">`.
+5. **`requestDeposit()` must run from a user-gesture handler** (button click, keypress). Browsers block iframe creation otherwise.
+6. Render `displayMessage` / `getDisplayMessage(err)` from [Errors](https://docs.blink.cash/sdk-reference/errors) on failure. Use the React hook's `error` field if you went the hook route.
+7. Call `deposit.destroy()` on component unmount or page unload (the React hook does this automatically).
+8. Confirm a viewport meta tag exists for mobile browsers: `<meta name="viewport" content="width=device-width, initial-scale=1.0">`.
 
 ## Phase 5b — React Native SDK integration (skip if Phase 1 chose web)
 

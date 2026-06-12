@@ -1,0 +1,59 @@
+---
+title: BlinkDepositButton
+description: API reference for the prebuilt Blink deposit button React component.
+---
+
+`BlinkDepositButton` is a prebuilt, Blink-branded deposit button you can drop onto your page instead of designing your own. It renders a black pill with a bold "Deposit stablecoins" headline, an italic "In a Blink" subline, and overlapping USDC/USDT coin marks.
+
+```typescript
+import { BlinkDepositButton } from '@swype-org/deposit/react';
+```
+
+<Info>
+The React entry point requires `react` >= 18 as a peer dependency. The component is self-contained — inline styles and data-URI icons, no CSS imports or extra dependencies.
+</Info>
+
+## Usage
+
+The button is presentation-only: it does not start a deposit by itself. Wire `onClick` to `requestDeposit` from the [React hook](/sdk-reference/react-hook) or the [`Deposit` class](/sdk-reference/deposit-class).
+
+```tsx
+import { BlinkDepositButton, useBlinkDeposit } from '@swype-org/deposit/react';
+
+function Checkout({ userWalletAddress }: { userWalletAddress: string }) {
+  const { status, error, displayMessage, requestDeposit } = useBlinkDeposit({
+    signer: '/api/sign-payment',
+  });
+
+  return (
+    <>
+      <BlinkDepositButton
+        onClick={() =>
+          requestDeposit({
+            amount: 50,
+            chainId: 8453,
+            address: userWalletAddress,
+            token: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+          })
+        }
+        loading={status === 'signer-loading'}
+      />
+      {error && <p className="error">{displayMessage}</p>}
+    </>
+  );
+}
+```
+
+## Props
+
+| Prop | Type | Required | Description |
+|------|------|----------|-------------|
+| `onClick` | `() => void` | Yes | Fired when the user taps the button. Call `requestDeposit()` here — it must run from a user-gesture handler so the browser allows the iframe to open. |
+| `disabled` | `boolean` | No | Disables interaction and dims the button. Use while prerequisites are missing (for example, no wallet address yet). |
+| `loading` | `boolean` | No | Non-interactive waiting state with a progress cursor. Use while the signer request is in flight (`status === 'signer-loading'`). |
+
+## Sizing and styling
+
+- The button fills the width of its container (`width: 100%`) at a fixed 56px height. Control its size by sizing the wrapping element.
+- Branding is intentionally fixed (black pill, white label, USDC/USDT marks) so the button looks the same across every Blink merchant. If you need a custom look, build your own button and wire it to `requestDeposit` instead — see [Integrate the Deposit SDK](/integration/deposit-sdk).
+- Hover, press, disabled, and loading states are built in.

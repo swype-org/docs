@@ -22,11 +22,13 @@ Creates a new `Deposit` instance. Throws a `DepositError` with code `INVALID_REQ
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `signer` | `string \| SignerFunction` | **required** | URL string for the signer endpoint, or a custom async function. When a string, the SDK sends a `POST` with a JSON `SignerRequest` body. When a function, the SDK calls it with a `SignerRequest` and expects a `Promise<SignerResponse>`. |
-| `webviewBaseUrl` | `string` | `'https://pay.blink.cash'` | Base URL of the hosted payment webview app. The SDK appends `merchantId`, `payload`, and `signature` as query parameters. |
+| `environment` | `'production' \| 'sandbox'` | `'production'` | Blink environment to target. `'sandbox'` points the hosted flow at the [testnet sandbox](/integration/testnet-sandbox) (`https://pay-sandbox.blink.cash`). An explicit `webviewBaseUrl` takes precedence. |
+| `webviewBaseUrl` | `string` | `'https://pay.blink.cash'` | Base URL of the hosted payment webview app. The SDK appends `merchantId`, `payload`, and `signature` as query parameters. Overrides `environment` when set. |
 | `hostedFlowOrigin` | `string` | Derived from `webviewBaseUrl` | Origin for `postMessage` validation. |
 | `containerElement` | `HTMLElement` | `document.body` | DOM element to mount the iframe overlay into. |
 | `signerTimeoutMs` | `number` | `15000` | Maximum milliseconds to wait for the signer to respond. |
 | `flowTimeoutMs` | `number` | `undefined` (no limit) | Maximum milliseconds for the entire flow (signer + user completion). |
+| `enableFullWidget` | `boolean` | `true` | Whether the hosted flow may show the full widget — the deposit options entry screen offering deposit addresses (pay from an exchange or any wallet) alongside Blink one tap. The full widget appears only when this is `true` **and** it is enabled on your Blink merchant account. Set to `false` to send users straight to the Blink one-tap flow. |
 | `debug` | `boolean` | `false` | Log lifecycle events to `console.debug` with the `[BlinkDeposit]` prefix. |
 
 ## Methods
