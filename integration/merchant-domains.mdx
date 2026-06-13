@@ -17,6 +17,15 @@ Your primary registration `domain` is already covered — you only need this end
 Adding a domain you already registered is a harmless no-op.
 </Info>
 
+<Note>
+**Local development.** Privy matches the **exact origin** — including protocol and port — so a localhost
+origin must include the port (for example `localhost:3000`); a bare `localhost` resolves to
+`http://localhost`, which won't match a page served on a port. The common dev ports `localhost:3000`,
+`localhost:5173`, and `localhost:5175` are already allowed, so you can test locally without registering
+anything. For any other localhost port, register it through this endpoint — pass `domain: "localhost:8080"`
+(localhost origins are registered on `http://`, not `https://`).
+</Note>
+
 ## Add a domain
 
 `POST https://api.blink.cash/v1/merchant-domains`
@@ -104,7 +113,7 @@ server, exactly as you do for the signer endpoint.
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
-| `domain` | `string` | Yes | Hostname only (for example, `www.coolapp.com`) — no scheme or path. Max 255 chars. Stored lowercased. |
+| `domain` | `string` | Yes | A hostname (for example, `www.coolapp.com`) or `localhost`, optionally with a `:port` (`localhost:3000`, `pay.coolapp.com:5173`). An `http(s)://` scheme is accepted and stripped; no path or query. Max 255 chars. Stored lowercased. |
 
 ## Response codes
 
