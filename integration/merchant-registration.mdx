@@ -100,6 +100,10 @@ Successful response (`202 Accepted`):
 
 Once active, Blink's hosted flow verifies every signed payment link your signer produces by fetching your public key from the API (`GET /v1/merchants/{id}/public-key`).
 
+## Additional domains
+
+Your `domain` above is whitelisted automatically on approval. If you serve the same app from other origins (an apex plus `www`, a staging or preview host, a partner domain), whitelist each one — up to 10 — via [Whitelist Additional Domains](/integration/merchant-domains), or the deposit flow won't authenticate on those origins.
+
 ## Key rotation
 
 Public key rotation after approval is handled by contacting Blink directly.

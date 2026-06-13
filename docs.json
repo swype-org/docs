@@ -51,6 +51,7 @@
               "integration/fees",
               "integration/key-generation",
               "integration/merchant-registration",
+              "integration/merchant-domains",
               "integration/signer-endpoint",
               "integration/deposit-sdk",
               "integration/deposit-mobile-sdk",

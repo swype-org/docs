@@ -53,7 +53,7 @@ title: Integrate Blink end-to-end
 description: AI agent prompt for scaffolding a complete Blink integration into your codebase.
 ---
 
-Your mission is to integrate Blink end-to-end into this project: a server-side signer endpoint, the appropriate client SDK, and a working deposit button. The full source of truth lives at `https://docs.blink.cash` — fetch the linked pages as you go and treat them as authoritative over anything you have memorised.
+You are an AI coding agent. Your mission is to integrate Blink end-to-end into this project: a server-side signer endpoint, the appropriate client SDK, and a working deposit button. The full source of truth lives at `https://docs.blink.cash` — fetch the linked pages as you go and treat them as authoritative over anything you have memorised.
 
 Work through the phases below in order. Do not skip ahead. Phase 2 (Discovery) is a hard gate — write zero code until you have answers.
 
@@ -77,6 +77,7 @@ These pages are the implementation reference. You don't have to fetch all of the
 - [Fees](https://docs.blink.cash/integration/fees)
 - [Key Generation](https://docs.blink.cash/integration/key-generation)
 - [Merchant Registration](https://docs.blink.cash/integration/merchant-registration)
+- [Whitelist Additional Domains](https://docs.blink.cash/integration/merchant-domains)
 - [Signer Endpoint](https://docs.blink.cash/integration/signer-endpoint) — required reading for Phase 4
 - [Deposit SDK (Web)](https://docs.blink.cash/integration/deposit-sdk) — required reading for Phase 5a
 - [Mobile Deposit SDK](https://docs.blink.cash/integration/deposit-mobile-sdk) — required reading for Phase 5b
@@ -164,19 +165,28 @@ Before reading `package.json` or running anything, ask the user the questions be
 
      Tell the user the application returns a reserved `merchantId` immediately (status `PENDING`), so the install can complete and tests can run, but real transfers will fail with `MERCHANT_NOT_REGISTERED` until a Blink operator approves out-of-band.
 
+   - **Additional domains to whitelist.** Ask whether the app is (or will be) served on origins beyond the primary `domain` above — an apex plus `www`, staging/preview hosts, country TLDs, or partner domains. Collect up to 10. The primary `domain` is whitelisted automatically on approval; any extras are registered after approval via `POST /v1/merchant-domains` (see [Whitelist Additional Domains](https://docs.blink.cash/integration/merchant-domains)) and are needed or the deposit flow won't authenticate on those origins.
+
 7. **Private key storage.** Ask which:
 
    - Secrets manager (preferred for production) — AWS Secrets Manager, HashiCorp Vault, GCP Secret Manager, Doppler, 1Password Connect, etc.
    - `.env.local` for dev only — confirm it is git-ignored.
 
-8. **(Web only) Deposit button.** Ask whether the user wants:
+8. **(Web only) Deposit experience.** Ask whether the user wants:
+
+   - **Deposit addresses + Blink one tap (full widget — default)** — the hosted flow opens with a deposit options screen offering deposit addresses (pay from an exchange or any wallet) alongside Blink's one-tap deposit. Leave `enableFullWidget` unset.
+   - **Just Blink one tap** — every user goes straight to the one-tap flow. Set `enableFullWidget: false` in the `Deposit` config in Phase 5a.
+
+   Note: the full widget also requires the feature to be enabled on the merchant's Blink account. If it is disabled there, the hosted flow stays in one-tap mode regardless of the SDK setting.
+
+9. **(Web only) Deposit button.** Ask whether the user wants:
 
    - **Blink-provided button (default)** — render the prebuilt `BlinkDepositButton` from `@swype-org/deposit/react`: a Blink-branded black pill ("Deposit stablecoins / In a Blink" with USDC/USDT marks). Zero design work; hover, press, disabled, and loading states are built in. See [`BlinkDepositButton`](https://docs.blink.cash/sdk-reference/blink-deposit-button).
    - **Their own button** — reuse or build a button in the app's own design system and wire it to `requestDeposit()`.
 
    If the app already has a deposit/checkout button, point at it and ask whether to keep it or swap in the Blink-provided one.
 
-9. **(Mobile only) URL scheme.** Read `app.json` (Expo) or `Info.plist` / `AndroidManifest.xml` (bare RN) first. If a scheme is already registered, propose using it. Otherwise ask (e.g. `myapp`). The scheme must match `MobileDeposit`'s `callbackScheme` exactly.
+10. **(Mobile only) URL scheme.** Read `app.json` (Expo) or `Info.plist` / `AndroidManifest.xml` (bare RN) first. If a scheme is already registered, propose using it. Otherwise ask (e.g. `myapp`). The scheme must match `MobileDeposit`'s `callbackScheme` exactly.
 
 Once you have answers, summarise them back to the user in a short bullet list and confirm before moving to Phase 3.
 
@@ -258,17 +268,18 @@ Then:
 
 1. `npm install @swype-org/deposit` (or yarn / pnpm equivalent).
 2. Initialise the SDK with `signer: '<path from Phase 4>'` (e.g. `'/api/sign-payment'`) **and** `merchantId: '<merchantId from Phase 3>'`. The `merchantId` is a public identifier — unlike the private key, it is safe in client code. Passing it lets the SDK's background preload prefetch the merchant config and signing key before the user ever clicks, so the deposit UI opens near-instantly; omitting it still works but adds avoidable latency to the first click. Construct the `Deposit` instance (or mount the React hook) when the page or component mounts — not lazily inside the click handler — so the preload has time to warm up.
-3. Render the deposit button per the Phase 2 choice:
+3. Apply the deposit experience choice from Phase 2: if the user chose **just Blink one tap**, add `enableFullWidget: false` to the `Deposit` config; otherwise omit the option (it defaults to `true`).
+4. Render the deposit button per the Phase 2 choice:
    - **Blink-provided** — import `BlinkDepositButton` from `@swype-org/deposit/react`, wire `onClick` to `requestDeposit(...)`, and pass `loading` while the signer call is in flight (e.g. `loading={status === 'signer-loading'}` with the React hook). Follow [`BlinkDepositButton`](https://docs.blink.cash/sdk-reference/blink-deposit-button).
    - **User's own** — wire their existing or new button's click handler to `requestDeposit(...)`.
-4. Wire `requestDeposit({ amount, chainId, address, token })` to the button click handler. Pull `address` from the wallet source picked in Phase 2 — for example:
+5. Wire `requestDeposit({ amount, chainId, address, token })` to the button click handler. Pull `address` from the wallet source picked in Phase 2 — for example:
    - Privy: `const { wallets } = useWallets(); const address = wallets[0]?.address;`
    - wagmi: `const { address } = useAccount();`
    - Hardcoded: use the address the user provided in Phase 2.
-5. **`requestDeposit()` must run from a user-gesture handler** (button click, keypress). Browsers block iframe creation otherwise.
-6. Render `displayMessage` / `getDisplayMessage(err)` from [Errors](https://docs.blink.cash/sdk-reference/errors) on failure. Use the React hook's `error` field if you went the hook route.
-7. Call `deposit.destroy()` on component unmount or page unload (the React hook does this automatically).
-8. Confirm a viewport meta tag exists for mobile browsers: `<meta name="viewport" content="width=device-width, initial-scale=1.0">`.
+6. **`requestDeposit()` must run from a user-gesture handler** (button click, keypress). Browsers block iframe creation otherwise.
+7. Render `displayMessage` / `getDisplayMessage(err)` from [Errors](https://docs.blink.cash/sdk-reference/errors) on failure. Use the React hook's `error` field if you went the hook route.
+8. Call `deposit.destroy()` on component unmount or page unload (the React hook does this automatically).
+9. Confirm a viewport meta tag exists for mobile browsers: `<meta name="viewport" content="width=device-width, initial-scale=1.0">`.
 
 ## Phase 5b — React Native SDK integration (skip if Phase 1 chose web)
 
@@ -325,6 +336,7 @@ Walk the user through [Production Checklist](https://docs.blink.cash/integration
 - Server-side verification of transfer status — do not trust the client-side `DepositResult` for anything irreversible.
 - Monitoring + alerting on signer errors, timeouts, and elevated failure rates.
 - `reference` and/or `metadata` populated on `requestDeposit()` calls so payments can be reconciled to internal orders.
+- If the user listed additional domains in Phase 2, whitelist each via [Whitelist Additional Domains](https://docs.blink.cash/integration/merchant-domains) once the merchant is approved (active). Build the `X-Merchant-Authorization` header by signing an auth envelope with the merchant private key — the same key as the signer.
 
 ## Closing — Final summary
 

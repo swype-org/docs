@@ -27,6 +27,7 @@ These pages are the implementation reference. You don't have to fetch all of the
 - [Fees](https://docs.blink.cash/integration/fees)
 - [Key Generation](https://docs.blink.cash/integration/key-generation)
 - [Merchant Registration](https://docs.blink.cash/integration/merchant-registration)
+- [Whitelist Additional Domains](https://docs.blink.cash/integration/merchant-domains)
 - [Signer Endpoint](https://docs.blink.cash/integration/signer-endpoint) — required reading for Phase 4
 - [Deposit SDK (Web)](https://docs.blink.cash/integration/deposit-sdk) — required reading for Phase 5a
 - [Mobile Deposit SDK](https://docs.blink.cash/integration/deposit-mobile-sdk) — required reading for Phase 5b
@@ -113,6 +114,8 @@ Before reading `package.json` or running anything, ask the user the questions be
      - `description` (20–1000 chars) — what the product is and how it uses Blink.
 
      Tell the user the application returns a reserved `merchantId` immediately (status `PENDING`), so the install can complete and tests can run, but real transfers will fail with `MERCHANT_NOT_REGISTERED` until a Blink operator approves out-of-band.
+
+   - **Additional domains to whitelist.** Ask whether the app is (or will be) served on origins beyond the primary `domain` above — an apex plus `www`, staging/preview hosts, country TLDs, or partner domains. Collect up to 10. The primary `domain` is whitelisted automatically on approval; any extras are registered after approval via `POST /v1/merchant-domains` (see [Whitelist Additional Domains](https://docs.blink.cash/integration/merchant-domains)) and are needed or the deposit flow won't authenticate on those origins.
 
 7. **Private key storage.** Ask which:
 
@@ -283,6 +286,7 @@ Walk the user through [Production Checklist](https://docs.blink.cash/integration
 - Server-side verification of transfer status — do not trust the client-side `DepositResult` for anything irreversible.
 - Monitoring + alerting on signer errors, timeouts, and elevated failure rates.
 - `reference` and/or `metadata` populated on `requestDeposit()` calls so payments can be reconciled to internal orders.
+- If the user listed additional domains in Phase 2, whitelist each via [Whitelist Additional Domains](https://docs.blink.cash/integration/merchant-domains) once the merchant is approved (active). Build the `X-Merchant-Authorization` header by signing an auth envelope with the merchant private key — the same key as the signer.
 
 ## Closing — Final summary
 

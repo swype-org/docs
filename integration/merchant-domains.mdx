@@ -1,0 +1,132 @@
+---
+title: Whitelist Additional Domains
+description: Register extra origins where you embed the Blink deposit flow so SDK auth works on every domain you serve.
+---
+
+Blink's deposit flow runs in an iframe (web) embedded on your site. The wallet layer behind it gates
+authentication by the **top-level page origin** — the domain your users actually visit. Your primary
+`domain` (submitted during [Merchant Registration](/integration/merchant-registration)) is whitelisted
+automatically when your merchant account is approved.
+
+If you serve the same app from **additional origins** — an apex plus `www`, a staging or preview host, a
+country-specific TLD, or a partner domain — each of those must be whitelisted too, or the deposit flow
+fails to authenticate on that origin. Use this endpoint to add them.
+
+<Info>
+Your primary registration `domain` is already covered — you only need this endpoint for *extra* origins.
+Adding a domain you already registered is a harmless no-op.
+</Info>
+
+## Add a domain
+
+`POST https://api.blink.cash/v1/merchant-domains`
+
+<Note>
+On the [testnet sandbox](/integration/testnet-sandbox)? Use
+`https://api-sandbox.blink.cash/v1/merchant-domains` instead.
+</Note>
+
+This endpoint is authenticated with a signed `X-Merchant-Authorization` header (see
+[Authentication](#authentication) below) and your merchant account must be **active** (approved). The
+request body carries only the domain.
+
+```bash
+curl -X POST https://api.blink.cash/v1/merchant-domains \
+  -H 'Content-Type: application/json' \
+  -H "X-Merchant-Authorization: $MERCHANT_AUTH" \
+  -d @- <<'JSON'
+{
+  "domain": "www.coolapp.com"
+}
+JSON
+```
+
+Successful response (`201 Created`):
+
+```json
+{
+  "merchantId": "a1b2c3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+  "domain": "www.coolapp.com",
+  "added": ["https://www.coolapp.com"]
+}
+```
+
+`added` lists the origins newly whitelisted by this call. For a bare apex (for example `coolapp.com`)
+both the apex and its `www` variant are registered together, so `added` may contain two origins. When the
+domain is already whitelisted, `added` is an empty array (idempotent — no slot is consumed).
+
+## Authentication
+
+Requests are authenticated the same way as [merchant withdrawals](/integration/signer-endpoint): a
+signature-based envelope proving "I am merchant X", carried in the `X-Merchant-Authorization` header. It
+is **not** a fund-movement authorization — it only proves identity.
+
+The header value is a base64-encoded JSON envelope:
+
+```json
+{
+  "merchantId": "<your merchantId>",
+  "payload": "<base64url-encoded JSON payload>",
+  "signature": "<base64url ECDSA signature over the payload string>"
+}
+```
+
+Build it on your server with the **same private key** you use for your [signer endpoint](/integration/signer-endpoint):
+
+<Steps>
+  <Step title="Build the payload">
+    A small JSON object with a version and a fresh timestamp:
+    ```json
+    { "version": "v1", "signatureTimestamp": "2026-06-11T00:00:00.000Z" }
+    ```
+    Blink enforces a 15-minute max signature age, so generate `signatureTimestamp` per request.
+  </Step>
+  <Step title="Base64url-encode the payload">
+    Encode the JSON string to base64url — this exact string is what you sign.
+  </Step>
+  <Step title="Sign the encoded string">
+    Sign the base64url payload string with ECDSA P-256 + SHA-256 (the same algorithm as the signer), then
+    base64url-encode the signature. See [Key Generation](/integration/key-generation) for the key, and the
+    [Signer Endpoint](/integration/signer-endpoint) for the identical signing mechanics.
+  </Step>
+  <Step title="Assemble and base64-encode the envelope">
+    Put `{ merchantId, payload, signature }` into JSON, base64-encode the whole thing, and send it as the
+    `X-Merchant-Authorization` header.
+  </Step>
+</Steps>
+
+<Warning>
+Never expose your merchant private key in client code. Build the `X-Merchant-Authorization` header on your
+server, exactly as you do for the signer endpoint.
+</Warning>
+
+## Request fields
+
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `domain` | `string` | Yes | Hostname only (for example, `www.coolapp.com`) — no scheme or path. Max 255 chars. Stored lowercased. |
+
+## Response codes
+
+| Code | Meaning |
+|------|---------|
+| `201` | Domain registered (or already present). `added` lists newly whitelisted origins. |
+| `400` | Validation error — the `X-Merchant-Authorization` header is malformed, or `domain` is missing or not a valid hostname. |
+| `401 MERCHANT_AUTHORIZATION_MISSING` | The `X-Merchant-Authorization` header is missing. |
+| `403 MERCHANT_NOT_REGISTERED` / `MERCHANT_NOT_ACTIVE` | The merchant is unknown, or not yet approved. Wait for approval before whitelisting additional domains. |
+| `422 MERCHANT_DOMAIN_LIMIT_REACHED` | The merchant already has the maximum of 10 additional domains. |
+| `502` | Blink could not reach its upstream domain registry. Retry. |
+
+## Limits and behavior
+
+<Note>
+**Maximum 10 additional domains per merchant.** This is in addition to your primary registration
+`domain`. Re-adding a domain you already have does not count against the limit.
+</Note>
+
+- **Add-only.** There is no list or delete endpoint. To remove a domain, contact Blink at
+  [s@blink.cash](mailto:s@blink.cash).
+- **Idempotent.** Re-posting the same domain is safe and returns `added: []`.
+- **Apex + `www` together.** Posting a bare apex (`coolapp.com`) also whitelists `www.coolapp.com`; posting
+  a `www` host also whitelists the apex. Deeper subdomains (`pay.coolapp.com`) are registered exactly as
+  given.
