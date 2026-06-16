@@ -66,9 +66,10 @@ domain is already whitelisted, `added` is an empty array (idempotent — no slot
 
 ## Authentication
 
-Requests are authenticated the same way as [merchant withdrawals](/integration/signer-endpoint): a
-signature-based envelope proving "I am merchant X", carried in the `X-Merchant-Authorization` header. It
-is **not** a fund-movement authorization — it only proves identity.
+Requests are authenticated with the signed `X-Merchant-Authorization` header — a signature-based envelope
+proving "I am merchant X". It is **not** a fund-movement authorization; it only proves identity. See
+[Merchant Authentication](/integration/authentication) for the full reference; the steps below are a quick
+recap.
 
 The header value is a base64-encoded JSON envelope:
 

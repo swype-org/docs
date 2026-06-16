@@ -1,0 +1,127 @@
+---
+title: Merchant Authentication
+description: Authenticate server-to-server Blink API calls with a signed X-Merchant-Authorization header.
+---
+
+Server-to-server Blink endpoints — [whitelisting domains](/integration/merchant-domains) and the
+[deposit & user reporting APIs](/integration/merchant-api) — are authenticated with a signed
+`X-Merchant-Authorization` header. It is a **signature-based identity credential** that proves
+"I am merchant X". It is **not** a fund-movement authorization — it only proves identity, so the
+same credential safely authenticates read endpoints and identity-scoped writes alike.
+
+You build it on your server with the **same ECDSA P-256 private key** you use for your
+[signer endpoint](/integration/signer-endpoint). Blink stores only your public key (submitted during
+[Merchant Registration](/integration/merchant-registration)), so a leaked credential cannot be used to
+recover your key.
+
+<Warning>
+Never expose your merchant private key in client code. Always build the `X-Merchant-Authorization`
+header on your server.
+</Warning>
+
+## Where it's used
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| [`/v1/merchant-users`](/integration/merchant-api#list-blink-users) | `GET` | List your Blink users / look one up by wallet. |
+| [`/v1/merchant-deposits`](/integration/merchant-api#list-deposits) | `GET` | List deposits into your platform. |
+| [`/v1/merchant-domains`](/integration/merchant-domains) | `POST` | Whitelist an additional origin. |
+
+The Deposit SDK [signer endpoint](/integration/signer-endpoint) uses the **same signing algorithm**, but
+its payload additionally binds the payment parameters (`amount`, `address`, `token`, …). The header
+credential below is the identity-only variant: its payload carries just a version and a fresh timestamp.
+
+## The header
+
+The `X-Merchant-Authorization` value is a base64-encoded JSON envelope:
+
+```json
+{
+  "merchantId": "<your merchantId>",
+  "payload": "<base64url-encoded JSON payload>",
+  "signature": "<base64url ECDSA signature over the payload string>"
+}
+```
+
+## Build the header
+
+<Steps>
+  <Step title="Build the payload">
+    A small JSON object with a version and a fresh timestamp:
+    ```json
+    { "version": "v1", "signatureTimestamp": "2026-06-16T00:00:00.000Z" }
+    ```
+    Generate `signatureTimestamp` per request — Blink enforces a 15-minute max signature age.
+  </Step>
+  <Step title="Base64url-encode the payload">
+    Encode the JSON string to base64url (no padding) — this exact string is what you sign.
+  </Step>
+  <Step title="Sign the encoded string">
+    Sign the base64url payload string with **ECDSA P-256 + SHA-256**, then base64url-encode the
+    signature. See [Key Generation](/integration/key-generation) for the key and the
+    [Signer Endpoint](/integration/signer-endpoint) for the identical signing mechanics.
+  </Step>
+  <Step title="Assemble and base64-encode the envelope">
+    Put `{ merchantId, payload, signature }` into JSON, base64-encode the whole thing, and send it as the
+    `X-Merchant-Authorization` header.
+  </Step>
+</Steps>
+
+Example (Node.js) — reuses the helpers from your [signer endpoint](/integration/signer-endpoint):
+
+```javascript
+const { createSign } = require('node:crypto');
+
+function buildMerchantAuthHeader(merchantId, privateKeyPem) {
+  const payloadObject = {
+    version: 'v1',
+    signatureTimestamp: new Date().toISOString(),
+  };
+
+  // 1. Base64url-encode the payload JSON — this exact string is what you sign.
+  const payload = Buffer.from(JSON.stringify(payloadObject), 'utf8').toString('base64url');
+
+  // 2. Sign the encoded payload string with ECDSA P-256 + SHA-256.
+  const signer = createSign('SHA256');
+  signer.update(payload);
+  signer.end();
+  const signature = signer.sign(privateKeyPem).toString('base64url');
+
+  // 3. Base64-encode the whole { merchantId, payload, signature } envelope.
+  const envelope = JSON.stringify({ merchantId, payload, signature });
+  return Buffer.from(envelope, 'utf8').toString('base64');
+}
+```
+
+Send it on every request:
+
+```bash
+curl https://api.blink.cash/v1/merchant-deposits \
+  -H "X-Merchant-Authorization: $MERCHANT_AUTH"
+```
+
+## Freshness
+
+Blink validates the payload's timestamp server-side, so you don't manage TTLs yourself:
+
+- **`signatureTimestamp`** (recommended) — must be within the last **15 minutes** and not in the future.
+- **`expiresAt`** (optional alternative) — an explicit expiry; rejected if already past or more than
+  **1 hour** in the future.
+
+Include at least one. Because the credential is not bound to the individual request, treat it like a
+short-lived bearer token: always send it over HTTPS and regenerate it per request from the fresh
+timestamp.
+
+## Error responses
+
+All envelope-authenticated endpoints share these auth failures (in the standard
+[`Error`](/integration/merchant-api#error-shape) shape):
+
+| Code | Meaning |
+|------|---------|
+| `400` | The `X-Merchant-Authorization` header is missing JSON / not base64 / malformed. |
+| `401 MERCHANT_AUTHORIZATION_MISSING` | The `X-Merchant-Authorization` header is absent. |
+| `403 MERCHANT_NOT_REGISTERED` / `MERCHANT_NOT_ACTIVE` | The merchant is unknown or not yet approved. |
+| `422 MERCHANT_AUTHORIZATION_EXPIRED` | The `signatureTimestamp`/`expiresAt` is stale or expired. |
+| `422 MERCHANT_SIGNATURE_TIMESTAMP_INVALID` | The timestamp is malformed or in the future. |
+| `422 MERCHANT_SIGNATURE_INVALID` | The signature does not verify against your registered public key. |

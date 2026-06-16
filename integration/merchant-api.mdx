@@ -1,0 +1,217 @@
+---
+title: Query Deposits and Users
+description: Read deposits into your platform and look up your Blink users over a server-to-server REST API.
+---
+
+The Reporting API lets your server read the Blink deposits flowing into your platform and look up the
+users behind them. Two read-only, paginated endpoints:
+
+- [`GET /v1/merchant-users`](#list-blink-users) — your Blink users, with each user's total deposited and
+  the embedded wallets they used. Look a user up by their embedded wallet to answer *"has this user
+  deposited with Blink before?"*
+- [`GET /v1/merchant-deposits`](#list-deposits) — individual deposits, filterable by user, status, chain,
+  and date range.
+
+Both are scoped entirely to **your** merchant account and return only the data you need to reconcile
+deposits — never the source wallet a user paid from, nor any personally identifying information.
+
+<Note>
+On the [testnet sandbox](/integration/testnet-sandbox)? Swap the host for
+`https://api-sandbox.blink.cash`.
+</Note>
+
+## Authentication
+
+Every request is authenticated with a signed `X-Merchant-Authorization` header — the same
+identity credential used across the server-to-server API. See
+[Merchant Authentication](/integration/authentication) for how to build it.
+
+```bash
+curl https://api.blink.cash/v1/merchant-deposits \
+  -H "X-Merchant-Authorization: $MERCHANT_AUTH"
+```
+
+## Typical flow
+
+The two endpoints compose. To check whether a returning user has deposited before and then pull their
+history:
+
+<Steps>
+  <Step title="Look the user up by their embedded wallet">
+    `GET /v1/merchant-users?embeddedWalletAddress=0x1a5F…&chainId=8453`. An empty `items` array means they
+    have never deposited to you. A hit returns their `userId` and total deposited.
+  </Step>
+  <Step title="Pull that user's deposits">
+    Take the `userId` from step 1 and call `GET /v1/merchant-deposits?userId=<userId>`.
+  </Step>
+</Steps>
+
+The `userId` is an opaque Blink-internal identifier — stable for a given user, safe to store, and the
+join key between the two endpoints.
+
+## Pagination
+
+Both endpoints are **cursor-paginated**. Each response includes a `nextCursor`:
+
+- If `nextCursor` is a string, pass it back as `?cursor=<nextCursor>` to fetch the next page.
+- If `nextCursor` is `null`, you have reached the last page.
+
+Use `limit` (1–100, default 25) to set the page size. Treat the cursor as **opaque** — don't parse or
+construct it. Deposits are returned newest-first; users are returned in a stable order suitable for
+walking the full list.
+
+```bash
+# First page
+curl "https://api.blink.cash/v1/merchant-deposits?limit=50" \
+  -H "X-Merchant-Authorization: $MERCHANT_AUTH"
+
+# Next page
+curl "https://api.blink.cash/v1/merchant-deposits?limit=50&cursor=eyJkIjoiMjAyNi0w…" \
+  -H "X-Merchant-Authorization: $MERCHANT_AUTH"
+```
+
+## List Blink users
+
+`GET https://api.blink.cash/v1/merchant-users`
+
+Lists the users who have deposited to you, each with their total completed deposits and the distinct
+embedded wallets they deposited into. Supply `embeddedWalletAddress` (optionally narrowed by `chainId`)
+to return only the user owning that wallet.
+
+### Query parameters
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `limit` | `integer` | No | Page size, 1–100. Default `25`. |
+| `cursor` | `string` | No | Opaque cursor from the previous page's `nextCursor`. |
+| `embeddedWalletAddress` | `string` | No | Return only the user owning this embedded wallet address. Matched case-insensitively. |
+| `chainId` | `integer` | No | Narrow the `embeddedWalletAddress` lookup to one chain (for example `8453`). |
+
+### Response
+
+```json
+{
+  "items": [
+    {
+      "userId": "33333333-3333-3333-3333-333333333333",
+      "amounts": {
+        "total": {
+          "amount": { "value": "610.00", "currency": "USD" },
+          "count": 7
+        },
+        "completed": {
+          "amount": { "value": "430.00", "currency": "USD" },
+          "count": 5
+        }
+      },
+      "firstDepositAt": "2026-01-02T18:30:00.000Z",
+      "lastDepositAt": "2026-06-15T12:05:00.000Z",
+      "embeddedWallets": [
+        {
+          "embeddedWalletAddress": "0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a",
+          "chain": { "chainId": 8453, "name": "Base" }
+        }
+      ]
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `userId` | `string` | Opaque Blink-internal user id. Use as the `userId` filter on `/v1/merchant-deposits`. |
+| `amounts.total.amount` | `object` | Sum of **all** this user's deposits to you (every status — gross intended), as `{ value, currency }` where `value` is a decimal string. |
+| `amounts.total.count` | `integer` | Total number of deposits this user has made to you (all statuses). |
+| `amounts.completed.amount` | `object` | Sum of this user's **completed** deposits to you (money actually received), same `{ value, currency }` shape. |
+| `amounts.completed.count` | `integer` | Number of **completed** deposits this user has made to you. |
+| `firstDepositAt` / `lastDepositAt` | `string` | ISO-8601 timestamps of the user's first and most recent deposit. |
+| `embeddedWallets` | `array` | Distinct embedded wallets this user deposited into, each with its `chain`. |
+
+<Info>
+`amounts` holds bucketed totals: `total` (all statuses, gross intended) and `completed` (money actually
+received). More status facets (for example a `pending` breakdown) can be added later without a breaking
+change.
+</Info>
+
+## List deposits
+
+`GET https://api.blink.cash/v1/merchant-deposits`
+
+Lists individual deposits into your platform, newest first.
+
+### Query parameters
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `limit` | `integer` | No | Page size, 1–100. Default `25`. |
+| `cursor` | `string` | No | Opaque cursor from the previous page's `nextCursor`. |
+| `userId` | `string` (uuid) | No | Return only this user's deposits (the `userId` from `/v1/merchant-users`). |
+| `status` | `string` | No | Filter by normalized status: `pending`, `completed`, or `failed`. |
+| `chainId` | `integer` | No | Filter to one chain (for example `8453`). |
+| `createdAfter` | `string` | No | ISO-8601; only deposits created at or after this time. |
+| `createdBefore` | `string` | No | ISO-8601; only deposits created at or before this time. |
+
+### Response
+
+```json
+{
+  "items": [
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "userId": "33333333-3333-3333-3333-333333333333",
+      "status": "completed",
+      "amount": { "value": "50.00", "currency": "USD" },
+      "chain": { "chainId": 8453, "name": "Base" },
+      "token": {
+        "symbol": "USDC",
+        "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+      },
+      "embeddedWalletAddress": "0x1a5FdBc891c5D4E6aD68064Ae45D43146D4F9f3a",
+      "createDate": "2026-06-15T12:05:00.000Z",
+      "updateDate": "2026-06-15T12:06:30.000Z"
+    }
+  ],
+  "nextCursor": "eyJkIjoiMjAyNi0wNi0xNVQxMjowNTowMC4wMDBaIiwiaWQiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEifQ"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Unique deposit id. |
+| `userId` | `string` | Opaque Blink-internal id of the depositing user (correlates to `/v1/merchant-users`). |
+| `status` | `string` | Normalized status — `pending`, `completed`, or `failed`. |
+| `amount` | `object` | USD amount as `{ value, currency }`, where `value` is a decimal string. |
+| `chain` | `object` | The destination chain, `{ chainId, name }`. |
+| `token` | `object` | The deposited token, `{ symbol, address }`. |
+| `embeddedWalletAddress` | `string` | The embedded wallet address the funds landed in. |
+| `createDate` / `updateDate` | `string` | ISO-8601 timestamps. |
+
+<Info>
+**Status is normalized.** Every in-flight state reports as `pending`; a settled deposit is `completed`;
+a failed or expired one is `failed`.
+</Info>
+
+## Response codes
+
+| Code | Meaning |
+|------|---------|
+| `200` | OK. |
+| `400` | Invalid query parameter or cursor, or a malformed `X-Merchant-Authorization` header. |
+| `401 MERCHANT_AUTHORIZATION_MISSING` | The `X-Merchant-Authorization` header is missing. |
+| `403 MERCHANT_NOT_REGISTERED` / `MERCHANT_NOT_ACTIVE` | The merchant is unknown or not yet approved. |
+| `422` | The authorization envelope is stale, expired, or its signature is invalid. See [Merchant Authentication](/integration/authentication#error-responses). |
+| `500` | Internal error. |
+
+### Error shape
+
+Errors use the standard Blink error envelope:
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid query parameters."
+  }
+}
+```
