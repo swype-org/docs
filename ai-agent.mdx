@@ -38,6 +38,7 @@ These pages are the implementation reference. You don't have to fetch all of the
 * [Signer Endpoint](https://docs.blink.cash/integration/signer-endpoint) — required reading for Phase 4
 * [Deposit SDK (Web)](https://docs.blink.cash/integration/deposit-sdk) — required reading for Phase 5a
 * [Mobile Deposit SDK](https://docs.blink.cash/integration/deposit-mobile-sdk) — required reading for Phase 5b
+* [Security & Content Integrity](https://docs.blink.cash/integration/security) — required reading for Phase 5a (web CSP)
 * [Testing](https://docs.blink.cash/integration/testing)
 * [Production Checklist](https://docs.blink.cash/integration/production-checklist)
 
@@ -238,6 +239,7 @@ Then:
 7. Render `displayMessage` / `getDisplayMessage(err)` from [Errors](https://docs.blink.cash/sdk-reference/errors) on failure. Use the React hook's `error` field if you went the hook route.
 8. Call `deposit.destroy()` on component unmount or page unload (the React hook does this automatically).
 9. Confirm a viewport meta tag exists for mobile browsers: `<meta name="viewport" content="width=device-width, initial-scale=1.0">`.
+10. **Lock the iframe origin (recommend for production).** Add — or, if you manage the app's response headers/middleware, propose adding — a Content-Security-Policy on the top-level page that restricts the deposit iframe to Blink: `frame-src https://pay.blink.cash` (add `https://pay-sandbox.blink.cash` for sandbox) with `script-src 'self'`. `connect-src` only needs the app's own signer endpoint — Blink's backend/Privy traffic runs inside the cross-origin iframe, not the host page. See [Security & Content Integrity](https://docs.blink.cash/integration/security).
 
 ## Phase 5b — React Native SDK integration (skip if Phase 1 chose web)
 
@@ -292,6 +294,8 @@ Walk the user through [Production Checklist](https://docs.blink.cash/integration
 * Allowlist of mobile callback schemes.
 * Private key in a secrets manager, not a `.env` file on disk.
 * Server-side verification of transfer status — do not trust the client-side `DepositResult` for anything irreversible.
+* (Web) Lock the deposit iframe origin with a `frame-src https://pay.blink.cash` Content-Security-Policy on the app's pages. See [Security & Content Integrity](https://docs.blink.cash/integration/security).
+* Verify the SDK supply chain with `npm audit signatures` (`@swype-org/deposit` is published with npm provenance); optionally diff the live UI against `https://pay.blink.cash/manifest.json`.
 * Monitoring + alerting on signer errors, timeouts, and elevated failure rates.
 * `reference` and/or `metadata` populated on `requestDeposit()` calls so payments can be reconciled to internal orders.
 * If the user listed additional domains in Phase 2, whitelist each via [Whitelist Additional Domains](https://docs.blink.cash/integration/merchant-domains) once the merchant is approved (active). Build the `X-Merchant-Authorization` header by signing an auth envelope with the merchant private key — the same key as the signer.

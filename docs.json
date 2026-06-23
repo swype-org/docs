@@ -57,6 +57,7 @@
               "integration/merchant-api",
               "integration/deposit-sdk",
               "integration/deposit-mobile-sdk",
+              "integration/security",
               "integration/testing",
               "integration/testnet-sandbox",
               "integration/production-checklist"

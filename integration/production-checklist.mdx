@@ -35,7 +35,17 @@ Before going live, verify each item:
     <Step title="Error handling implemented with DepositError codes and user-friendly messages via getDisplayMessage()." />
     <Step title="deposit.destroy() called on component unmount / page unload." />
     <Step title="Viewport meta tag set correctly for mobile (no unexpected scaling)." />
+    <Step title="CSP on your page restricts frame-src to https://pay.blink.cash (see Security & Content Integrity)." />
   </Steps>
+</Accordion>
+
+<Accordion title="Content integrity" icon="shield-check" defaultOpen>
+  <Steps>
+    <Step title="frame-src CSP set so the deposit iframe can only load from Blink." />
+    <Step title="Verified the deployed UI against https://pay.blink.cash/manifest.json (optional, for audits)." />
+    <Step title="npm audit signatures passes for @swype-org/deposit (provenance + lockfile integrity)." />
+  </Steps>
+  See [Security & Content Integrity](/integration/security) for details.
 </Accordion>
 
 <Accordion title="Monitoring and reconciliation" icon="chart-line" defaultOpen>

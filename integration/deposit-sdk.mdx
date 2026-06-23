@@ -288,6 +288,19 @@ await deposit.requestDeposit({
 
 The `reference` and `metadata` are forwarded to your signer endpoint so you can correlate the payment with your internal records.
 
+## Security
+
+The deposit UI loads live from `https://pay.blink.cash`. Before going live, lock
+the iframe origin with a Content-Security-Policy on your page and learn how to
+verify the build:
+
+```http theme={null}
+Content-Security-Policy: frame-src https://pay.blink.cash; script-src 'self';
+```
+
+See [Security & Content Integrity](/integration/security) for the full model,
+including passkey delegation, build-manifest verification, and SDK provenance.
+
 ## Mobile browser considerations
 
 - **Full-screen iframe:** On viewports 480px or narrower, the transfer iframe automatically renders full-screen with no border radius.
