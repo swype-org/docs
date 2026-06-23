@@ -32,9 +32,78 @@ What you need — and what you don't:
 | `frame-src` | `https://pay.blink.cash` (\+ sandbox host) | Restricts the deposit iframe to Blink's origin. |
 | `script-src` | `'self'` | The `@swype-org/deposit` SDK runs from your own bundle. |
 | `connect-src` | your **own** signer endpoint | The SDK calls your signer from your page. |
+| `img-src` | `data:` *(only if you use `BlinkDepositButton`)* | The button paints its USDC/USDT coin marks as inline `data:` SVGs in your DOM — see [below](#if-you-use-blinkdepositbutton). |
+| `style-src` | `'unsafe-inline'` *(only if you use `BlinkDepositButton`)* | The button styles itself with inline `style` attributes — see [below](#if-you-use-blinkdepositbutton). |
 
 <Note>
   You do **not** need to allow-list Blink's backend, Privy, Sentry, or any other Blink dependency in your CSP. All of that traffic originates **inside** the cross-origin `pay.blink.cash` iframe, which is governed by Blink's own policy — not your page's CSP.
+</Note>
+
+<Note>
+  The allow-list above covers the **deposit flow only**. If your own page independently connects wallets or calls other services *outside* the deposit iframe, those origins need their own `connect-src`/`frame-src` entries — that's your application's surface, separate from Blink's.
+</Note>
+
+## If you use BlinkDepositButton
+
+`@swype-org/deposit/react` exports a ready-made `BlinkDepositButton` you can drop onto your page. Unlike the deposit iframe, **this button renders in your own DOM**, so its assets are governed by *your* CSP — not Blink's. The button is intentionally self-contained: it paints its USDC/USDT coin marks as inline `data:` SVGs and styles itself with inline `style` attributes.
+
+If your CSP restricts `img-src` or `style-src` — directly, or via a `default-src` fallback — allow these so the button renders correctly:
+
+```http
+Content-Security-Policy: frame-src https://pay.blink.cash; script-src 'self'; connect-src 'self' https://signer.example.com; img-src 'self' data:; style-src 'self' 'unsafe-inline'
+```
+
+<Note>
+  Prefer to keep `img-src`/`style-src` strict? Use the `useBlinkDeposit` hook and render **your own** button instead of `BlinkDepositButton`. The hook carries no markup, so it adds no CSP requirements beyond the table above.
+</Note>
+
+## Deliver the policy in each environment
+
+The `frame-src` host changes per environment: production loads from `https://pay.blink.cash`, testnet/sandbox from `https://pay-sandbox.blink.cash`. Point each build at the host it actually loads.
+
+<CodeGroup>
+
+```http Production
+Content-Security-Policy: frame-src https://pay.blink.cash; script-src 'self'; connect-src 'self' https://signer.example.com
+```
+
+```http Sandbox
+Content-Security-Policy: frame-src https://pay-sandbox.blink.cash; script-src 'self'; connect-src 'self' https://signer.sandbox.example.com
+```
+
+```http "Local dev"
+Content-Security-Policy: frame-src https://pay-sandbox.blink.cash; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' ws://localhost:* http://localhost:*
+```
+
+</CodeGroup>
+
+<Warning>
+  A bundler dev server (Vite, webpack) needs `script-src` to also allow `'unsafe-inline' 'unsafe-eval'` for hot-module reload, plus `ws://localhost:*` in `connect-src` for the HMR socket. Keep **production** strict at `script-src 'self'` — never ship the relaxed dev values.
+</Warning>
+
+### Set it as a real response header
+
+A response header from your server or CDN is the strongest delivery — it can carry directives that a `<meta>` tag cannot:
+
+```http
+Content-Security-Policy: frame-src https://pay.blink.cash; script-src 'self'; connect-src 'self' https://signer.example.com
+X-Content-Type-Options: nosniff
+Referrer-Policy: strict-origin-when-cross-origin
+```
+
+### Static-only hosting
+
+If you ship a static SPA and can't control response headers, inject a `<meta>` tag into your `index.html`:
+
+```html
+<meta
+  http-equiv="Content-Security-Policy"
+  content="frame-src https://pay.blink.cash; script-src 'self'; connect-src 'self' https://signer.example.com"
+/>
+```
+
+<Note>
+  `frame-ancestors`, `X-Content-Type-Options`, and `Referrer-Policy` are **ignored** when delivered via `<meta>`. If you rely on those, set them as real response headers at your host or CDN.
 </Note>
 
 ## What Blink enforces on its side
@@ -89,9 +158,13 @@ Subresource Integrity (`integrity="sha384-…"`) only applies to `<script>` and 
 ## Checklist
 
 <Steps>
-  <Step title="frame-src CSP set on your production page, restricted to https://pay.blink.cash.">
+  <Step title="frame-src CSP set on your production page, restricted to https://pay.blink.cash (sandbox builds use https://pay-sandbox.blink.cash).">
   </Step>
   <Step title="connect-src allows your own signer endpoint.">
+  </Step>
+  <Step title="Production ships strict script-src 'self' — the relaxed dev values ('unsafe-inline'/'unsafe-eval') are never deployed.">
+  </Step>
+  <Step title="The policy is delivered as a real response header where possible; a <meta> tag is only a static-hosting fallback.">
   </Step>
   <Step title="npm audit signatures passes for @swype-org/deposit.">
   </Step>
