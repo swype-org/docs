@@ -1,74 +1,47 @@
 ---
-title: Security & Content Integrity
-description: How the deposit UI is served, how to lock its origin with CSP, and how to verify exactly what Blink ships.
+title: "Security & Content Integrity"
+description: "How the deposit UI is served, how to lock its origin with CSP, and how to verify exactly what Blink ships."
 ---
 
-The Blink deposit UI is loaded **live from `https://pay.blink.cash`** every time it
-opens. Live loading is a security
-feature for a payments surface: when we ship a security or fraud fix, it reaches
-your users immediately, without waiting for you to upgrade the SDK.
+The Blink deposit UI is loaded **live from `https://pay.blink.cash`** every time it opens. Live loading is a security feature for a payments surface: when we ship a security or fraud fix, it reaches your users immediately, without waiting for you to upgrade the SDK.
 
-This page covers the controls available to you as an integrator, and how to
-verify what we serve.
+This page covers the controls available to you as an integrator, and how to verify what we serve.
 
 <Warning>
-The single most effective control is a **Content-Security-Policy on your own
-page** that restricts where the deposit iframe may load from. Set it in
-production — see [Lock the iframe origin](#lock-the-iframe-origin).
+  The single most effective control is a **Content-Security-Policy on your own page** that restricts where the deposit iframe may load from. Set it in production — see [Lock the iframe origin](#lock-the-iframe-origin).
 </Warning>
 
 ## Lock the iframe origin
 
-Add a `frame-src` directive to your page's Content-Security-Policy so the browser
-will only ever load the deposit iframe from Blink — even if your page is
-compromised by an injected script:
+Add a `frame-src` directive to your page's Content-Security-Policy so the browser will only ever load the deposit iframe from Blink — even if your page is compromised by an injected script:
 
-```http theme={null}
+```http
 Content-Security-Policy: frame-src https://pay.blink.cash; script-src 'self';
 ```
 
 For testnet/sandbox integrations, also allow the sandbox host:
 
-```http theme={null}
+```http
 Content-Security-Policy: frame-src https://pay.blink.cash https://pay-sandbox.blink.cash; script-src 'self';
 ```
 
 What you need — and what you don't:
 
 | Directive | What to allow | Why |
-|-----------|---------------|-----|
-| `frame-src` | `https://pay.blink.cash` (+ sandbox host) | Restricts the deposit iframe to Blink's origin. |
+| --- | --- | --- |
+| `frame-src` | `https://pay.blink.cash` (\+ sandbox host) | Restricts the deposit iframe to Blink's origin. |
 | `script-src` | `'self'` | The `@swype-org/deposit` SDK runs from your own bundle. |
 | `connect-src` | your **own** signer endpoint | The SDK calls your signer from your page. |
 
 <Note>
-You do **not** need to allow-list Blink's backend, Privy, Sentry, or any other
-Blink dependency in your CSP. All of that traffic originates **inside** the
-cross-origin `pay.blink.cash` iframe, which is governed by Blink's own policy —
-not your page's CSP.
+  You do **not** need to allow-list Blink's backend, Privy, Sentry, or any other Blink dependency in your CSP. All of that traffic originates **inside** the cross-origin `pay.blink.cash` iframe, which is governed by Blink's own policy — not your page's CSP.
 </Note>
-
-### Passkeys behind a strict Permissions-Policy
-
-The SDK sets the `allow` attribute on the iframe so WebAuthn / passkey ceremonies
-work cross-origin. If your page sets a restrictive `Permissions-Policy`, delegate
-the WebAuthn features to Blink's origin so passkeys keep working:
-
-```http theme={null}
-Permissions-Policy: publickey-credentials-get=(self "https://pay.blink.cash"), publickey-credentials-create=(self "https://pay.blink.cash")
-```
 
 ## What Blink enforces on its side
 
-- **Origin-validated messaging** — every `postMessage` between the SDK and the
-  iframe is checked on origin, source window, and message type before it is
-  acted on. The parent-frame wallet bridge additionally enforces a JSON-RPC
-  method allowlist.
-- **Authentication is origin-gated** — the embedded auth provider (Privy) only
-  authenticates on origins you have registered with Blink (your merchant
-  `domain` plus any [additional domains](/integration/merchant-domains)). The
-  deposit flow cannot authenticate when embedded on an unapproved origin.
-- **TLS + HSTS** on the hosted UI, served from a CDN.
+- **Origin-validated messaging** — every `postMessage` between the SDK and the iframe is checked on origin, source window, and message type before it is acted on. The parent-frame wallet bridge additionally enforces a JSON-RPC method allowlist.
+- **Authentication is origin-gated** — the embedded auth provider (Privy) only authenticates on origins you have registered with Blink (your merchant `domain` plus any [additional domains](/integration/merchant-domains)). The deposit flow cannot authenticate when embedded on an unapproved origin.
+- **TLS \+ HSTS** on the hosted UI, served from a CDN.
 
 ## Verify what we serve
 
@@ -76,11 +49,11 @@ Permissions-Policy: publickey-credentials-get=(self "https://pay.blink.cash"), p
 
 Every deploy publishes a manifest of the exact bytes we serve:
 
-```bash theme={null}
+```bash
 curl -s https://pay.blink.cash/manifest.json | jq .
 ```
 
-```json theme={null}
+```json
 {
   "version": "1.0.0",
   "gitSha": "…",
@@ -94,40 +67,32 @@ curl -s https://pay.blink.cash/manifest.json | jq .
 
 You can fetch any referenced file and confirm its SHA-256 matches the manifest:
 
-```bash theme={null}
+```bash
 curl -s https://pay.blink.cash/index.html | shasum -a 256
 # compare against manifest.files["index.html"] (strip the "sha256-" prefix)
 ```
 
-A silent change to the served UI would no longer match the published manifest.
-(Sandbox: `https://pay-sandbox.blink.cash/manifest.json`.)
+A silent change to the served UI would no longer match the published manifest. (Sandbox: `https://pay-sandbox.blink.cash/manifest.json`.)
 
 ### The SDK supply chain
 
-The part of the integration that runs on your page — the `@swype-org/deposit`
-npm package — is pinned by your `package-lock.json` integrity hash and published
-with **npm provenance** (a signed attestation linking the published tarball to
-the exact source commit and CI build). Verify it:
+The part of the integration that runs on your page — the `@swype-org/deposit` npm package — is pinned by your `package-lock.json` integrity hash and published with **npm provenance** (a signed attestation linking the published tarball to the exact source commit and CI build). Verify it:
 
-```bash theme={null}
+```bash
 npm audit signatures
 ```
 
 ## Why we don't version-pin or SRI-pin the iframe
 
-Subresource Integrity (`integrity="sha384-…"`) only applies to `<script>` and
-`<link>` elements — it **cannot** be applied to an iframe document, which
-legitimately loads its own (content-hashed) subresources. Signature-based SRI is
-an emerging standard but is not yet broadly supported. Pinning a fixed version
-would also defeat the live-update model that lets us ship security fixes to your
-users immediately. The manifest above is the practical, verifiable equivalent
-for a whole-document iframe.
+Subresource Integrity (`integrity="sha384-…"`) only applies to `<script>` and `<link>` elements — it **cannot** be applied to an iframe document, which legitimately loads its own (content-hashed) subresources. Signature-based SRI is an emerging standard but is not yet broadly supported. Pinning a fixed version would also defeat the live-update model that lets us ship security fixes to your users immediately. The manifest above is the practical, verifiable equivalent for a whole-document iframe.
 
 ## Checklist
 
 <Steps>
-  <Step title="frame-src CSP set on your production page, restricted to https://pay.blink.cash." />
-  <Step title="connect-src allows your own signer endpoint." />
-  <Step title="Permissions-Policy delegates passkey features to Blink's origin (only if you set a restrictive policy)." />
-  <Step title="npm audit signatures passes for @swype-org/deposit." />
+  <Step title="frame-src CSP set on your production page, restricted to https://pay.blink.cash.">
+  </Step>
+  <Step title="connect-src allows your own signer endpoint.">
+  </Step>
+  <Step title="npm audit signatures passes for @swype-org/deposit.">
+  </Step>
 </Steps>
