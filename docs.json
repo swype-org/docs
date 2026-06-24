@@ -55,6 +55,7 @@
               "integration/merchant-domains",
               "integration/signer-endpoint",
               "integration/merchant-api",
+              "integration/campaigns-api",
               "integration/deposit-sdk",
               "integration/deposit-mobile-sdk",
               "integration/security",

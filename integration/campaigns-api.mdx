@@ -1,0 +1,273 @@
+---
+title: Reward Campaigns
+description: Read campaign details and qualified wallets, and push the per-user data (such as trade profit) that drives each user's reward.
+---
+
+A **campaign** is a reward you run for your users — for example, a **trade-profit match** that pays each user a multiple of the profit they earned during the campaign window. The Campaigns API lets your server read campaign state and **submit the per-user data that the reward is computed from**.
+
+- [`GET /v1/marketings/campaigns`](#list-campaigns) — your campaigns, with their window, caps, and running total.
+- [`GET /v1/marketings/campaigns/{campaignId}`](#get-a-campaign) — a single campaign.
+- [`GET /v1/marketings/campaigns/{campaignId}/qualifiedWallets`](#qualified-wallets) — wallets that qualified by depositing in the window, plus a batch "did this wallet qualify?" check.
+- [`GET /v1/marketings/campaigns/{campaignId}/participants`](#list-participants) — your users' reward amounts and payouts.
+- [`POST /v1/marketings/campaigns/{campaignId}/participants`](#submit-a-participant) — submit (upsert) one user's data, keyed by your own user id.
+
+Everything is scoped to **your** merchant account — a campaign that isn't yours returns `404`.
+
+<Note>
+On the [testnet sandbox](/integration/testnet-sandbox)? Swap the host for
+`https://api-sandbox.blink.cash`.
+</Note>
+
+## The model
+
+Two keys run through this API; keeping them straight makes the rest obvious.
+
+- **Qualification is keyed by wallet address.** A wallet *qualifies* by receiving a deposit from you during the campaign window (`startDate`–`endDate`). Qualification is derived from deposits — it isn't something you set.
+- **Rewards are keyed by your own user id (`merchantUserId`).** A **participant** owns the user's matched amount and all payouts, so a per-user cap is tracked in exactly one place even when the user deposited from several wallets. Each participant rolls the user's qualifying wallets up under it.
+
+You supply the per-user input the reward is computed from (trade profit, today) by **pushing participants**; Blink computes the match — capped per user, clamped to the remaining campaign budget, and **monotonic** (a later submission never lowers an existing match). Disbursement is handled separately; these endpoints never move funds.
+
+## Authentication
+
+Every request is authenticated with a signed `X-Merchant-Authorization` header — the same identity credential used across the server-to-server API. See [Merchant Authentication](/integration/authentication) for how to build it.
+
+```bash
+curl https://api.blink.cash/v1/marketings/campaigns \
+  -H "X-Merchant-Authorization: $MERCHANT_AUTH"
+```
+
+## Amounts and pagination
+
+Every amount is **onchain-native**: an integer quantity in the token's smallest unit (base units) as a decimal string, plus the token symbol and its decimals.
+
+```json
+{ "amount": "1000000", "currency": "USDC", "decimalPlaces": 6 }
+```
+
+The list endpoints are **cursor-paginated**. Pass `limit` (1–100, default `25`) and an opaque `cursor` from the previous page's `nextCursor`; a `null` `nextCursor` means the last page. Treat the cursor as opaque.
+
+## List campaigns
+
+`GET https://api.blink.cash/v1/marketings/campaigns`
+
+Lists your campaigns, newest first.
+
+### Query parameters
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `limit` | `integer` | No | Page size, 1–100. Default `25`. |
+| `cursor` | `string` | No | Opaque cursor from the previous page's `nextCursor`. |
+
+### Response
+
+```json
+{
+  "items": [
+    {
+      "id": "3f8c1e2a-7b4d-4c9a-9f1e-2a7b4d4c9a9f",
+      "type": "PER_TRADE_PROFIT_MATCH",
+      "status": "ACTIVE",
+      "displayName": "2× Your Profits",
+      "startDate": "2026-06-01T00:00:00.000Z",
+      "endDate": "2026-07-01T00:00:00.000Z",
+      "perTradeProfitMatch": {
+        "matchMultiplier": 2,
+        "maxAmountPerUser": { "amount": "100000000", "currency": "USDC", "decimalPlaces": 6 },
+        "maxAmountTotal": { "amount": "10000000000", "currency": "USDC", "decimalPlaces": 6 },
+        "currentAmountTotal": { "amount": "2500000000", "currency": "USDC", "decimalPlaces": 6 },
+        "payoutChainId": 8453,
+        "payoutTokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+      },
+      "createDate": "2026-05-20T12:00:00.000Z",
+      "updateDate": "2026-06-24T18:00:00.000Z"
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Campaign id — use it in the paths below. |
+| `type` | `string` | The campaign mechanic. Currently `PER_TRADE_PROFIT_MATCH`. |
+| `status` | `string` | `DRAFT`, `ACTIVE`, `PAUSED`, or `ENDED`. |
+| `displayName` | `string` | User-facing campaign name. |
+| `startDate` / `endDate` | `string` | ISO-8601 campaign window. A wallet qualifies by depositing within it. |
+| `perTradeProfitMatch.matchMultiplier` | `number` | The multiple applied to each user's profit (for example `2` for a 2× match). |
+| `perTradeProfitMatch.maxAmountPerUser` | `object` | Per-user reward cap, as a base-unit token amount. |
+| `perTradeProfitMatch.maxAmountTotal` | `object` | Whole-campaign reward budget. |
+| `perTradeProfitMatch.currentAmountTotal` | `object` | Rewards committed so far, against `maxAmountTotal`. |
+| `perTradeProfitMatch.payoutChainId` | `integer` | Chain the reward is paid on (numeric chain id). |
+| `perTradeProfitMatch.payoutTokenAddress` | `string` | Token contract the reward is paid in. |
+
+## Get a campaign
+
+`GET https://api.blink.cash/v1/marketings/campaigns/{campaignId}`
+
+Returns a single campaign (same shape as a list item). `404` if it doesn't exist or isn't yours.
+
+## Qualified wallets
+
+`GET https://api.blink.cash/v1/marketings/campaigns/{campaignId}/qualifiedWallets`
+
+With no `address` filter, returns the paginated list of wallets that deposited during the campaign window. With one or more `address` params, it's a point/batch **qualification check** — only the supplied addresses that qualify come back, so an address absent from the response did **not** qualify.
+
+### Query parameters
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `limit` | `integer` | No | Page size, 1–100. Default `25` (for the unfiltered list). |
+| `cursor` | `string` | No | Opaque cursor from the previous page's `nextCursor`. |
+| `address` | `string` | No | A wallet address to check. Repeat the param to batch — `?address=0xabc&address=0xdef`. |
+| `chainId` | `integer` | No | Narrow the check to one chain (numeric chain id, for example `8453`). |
+
+### Response
+
+```json
+{
+  "items": [
+    {
+      "address": "0x1111111111111111111111111111111111111111",
+      "chainId": 1,
+      "chainName": "Ethereum Mainnet",
+      "qualified": true,
+      "qualifiedDate": "2026-06-20T14:02:11.000Z",
+      "participant": { "id": "9c2f0b6e-1d3a-4e5f-8a7b-0c1d2e3f4a5b" }
+    }
+  ],
+  "nextCursor": null
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `address` | `string` | The qualifying wallet address. |
+| `chainId` | `integer` | The chain's numeric id, or `null` for non-EVM chains. |
+| `chainName` | `string` | Human-readable chain name. |
+| `qualified` | `boolean` | Always `true` for a returned wallet (the list only contains qualifying wallets). |
+| `qualifiedDate` | `string` | ISO-8601 of the earliest qualifying deposit in the window. |
+| `participant` | `object` | The participant this wallet maps to, once one exists; `null` until then. Use `participant.id` with the participants endpoint to read the reward and payouts. |
+
+## List participants
+
+`GET https://api.blink.cash/v1/marketings/campaigns/{campaignId}/participants`
+
+Lists your users' participation in the campaign — their matched reward and payouts. Supply `id` (a participant id) **or** `merchantUserId` (your own user id) to fetch a single participant instead of the list.
+
+### Query parameters
+
+| Param | Type | Required | Description |
+|-------|------|----------|-------------|
+| `limit` | `integer` | No | Page size, 1–100. Default `25`. |
+| `cursor` | `string` | No | Opaque cursor from the previous page's `nextCursor`. |
+| `id` | `string` (uuid) | No | A participant id (for example from a qualified wallet's `participant.id`). Returns that single participant. |
+| `merchantUserId` | `string` | No | Your own user id. Alternative to `id` for fetching a single participant. |
+| `status` | `string` | No | Filter the list by `QUALIFIED`, `MATCHED`, `PAID`, or `FAILED` (ignored when `id`/`merchantUserId` is set). |
+
+### Response
+
+A `CampaignParticipantList`, or a single participant when `id`/`merchantUserId` is set:
+
+```json
+{
+  "id": "9c2f0b6e-1d3a-4e5f-8a7b-0c1d2e3f4a5b",
+  "campaignId": "3f8c1e2a-7b4d-4c9a-9f1e-2a7b4d4c9a9f",
+  "merchantUserId": "user-abc",
+  "status": "MATCHED",
+  "qualifiedDate": "2026-06-20T14:02:11.000Z",
+  "tradeProfit": { "amount": "500000000", "currency": "USDC", "decimalPlaces": 6 },
+  "amountMatched": { "amount": "1000000000", "currency": "USDC", "decimalPlaces": 6 },
+  "maxMatchPerUser": { "amount": "100000000", "currency": "USDC", "decimalPlaces": 6 },
+  "associatedWallets": [
+    { "address": "0x1111111111111111111111111111111111111111", "chainId": 1, "chainName": "Ethereum Mainnet", "qualifiedDate": "2026-06-20T14:02:11.000Z" },
+    { "address": "0x2222222222222222222222222222222222222222", "chainId": 8453, "chainName": "Base", "qualifiedDate": null }
+  ],
+  "payouts": [],
+  "createDate": "2026-06-24T18:00:00.000Z",
+  "updateDate": "2026-06-24T18:00:00.000Z"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | `string` | Participant id. |
+| `merchantUserId` | `string` | Your own user id for this participant. |
+| `status` | `string` | `QUALIFIED`, `MATCHED`, `PAID`, or `FAILED`. |
+| `qualifiedDate` | `string` | Earliest qualifying deposit across the participant's wallets. |
+| `tradeProfit` | `object` | The input amount the reward was computed from. |
+| `amountMatched` | `object` | The reward owed — `min(multiplier × profit, maxMatchPerUser, remaining budget)`. |
+| `maxMatchPerUser` | `object` | The per-user cap snapshot. |
+| `associatedWallets` | `array` | The user's wallets rolled up under this participant, each with a `qualifiedDate` (`null` if that wallet didn't qualify). |
+| `payouts` | `array` | Disbursements of the reward, each with its own status trail. Empty until a payout is made. |
+
+## Submit a participant
+
+`POST https://api.blink.cash/v1/marketings/campaigns/{campaignId}/participants`
+
+Pushes one user's data into the campaign. Blink computes the reward from the `amount` you submit, applying the campaign's multiplier and caps.
+
+- **`merchantUserId` is the idempotency key.** The first submission **creates** the participant and returns `201`; a repeat with the same `merchantUserId` **updates** it (refreshing the input amount) and returns `200`. Re-submitting is always safe — the reward never decreases and the budget is never double-counted.
+- **`amount`** is the measured input the reward is based on (trade profit, today), as a base-unit token amount. Submit it in **USDC base units (6 decimals)**.
+- **`wallets`** is the user's wallets, each `{ address, chain: { id } }` where `chain.id` is the **numeric** chain id (for example `1` = Ethereum, `8453` = Base, `137` = Polygon).
+- The campaign must be `ACTIVE`, and at least one submitted wallet must have a qualifying deposit in the window.
+
+### Request body
+
+```json
+{
+  "merchantUserId": "user-abc",
+  "wallets": [
+    { "address": "0x1111111111111111111111111111111111111111", "chain": { "id": 1 } },
+    { "address": "0x2222222222222222222222222222222222222222", "chain": { "id": 8453 } }
+  ],
+  "amount": { "amount": "500000000", "currency": "USDC", "decimalPlaces": 6 }
+}
+```
+
+```bash
+curl -X POST https://api.blink.cash/v1/marketings/campaigns/3f8c1e2a-7b4d-4c9a-9f1e-2a7b4d4c9a9f/participants \
+  -H "X-Merchant-Authorization: $MERCHANT_AUTH" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "merchantUserId": "user-abc",
+    "wallets": [{ "address": "0x1111111111111111111111111111111111111111", "chain": { "id": 1 } }],
+    "amount": { "amount": "500000000", "currency": "USDC", "decimalPlaces": 6 }
+  }'
+```
+
+### Response
+
+`201 Created` on the first submission, `200 OK` on a repeat. The body is the full participant (identical to [Get a participant](#list-participants) above). With this example — 500 USDC profit on a 2× campaign — `amountMatched` is `1000000000` (1,000 USDC), subject to the per-user and total caps.
+
+<Info>
+Only users who deposited with Blink during the campaign window earn a reward. If none of a submitted user's wallets qualified, the request is rejected with `422 NO_QUALIFYING_WALLET` and no participant is created — re-submit once the user has a qualifying deposit.
+</Info>
+
+## Response codes
+
+| Code | Meaning |
+|------|---------|
+| `200` | OK — read succeeded, or a participant was updated. |
+| `201` | Created — a new participant was inserted. |
+| `400` | Invalid query parameter, cursor, or request body, or a malformed `X-Merchant-Authorization` header. |
+| `401 MERCHANT_AUTHORIZATION_MISSING` | The `X-Merchant-Authorization` header is missing. |
+| `403 MERCHANT_NOT_REGISTERED` / `MERCHANT_NOT_ACTIVE` | The merchant is unknown or not yet approved. |
+| `404` | The campaign doesn't exist or isn't yours. |
+| `422 CAMPAIGN_NOT_ACTIVE` | The campaign isn't `ACTIVE`, so it isn't accepting data. |
+| `422 NO_QUALIFYING_WALLET` | No submitted wallet has a qualifying deposit in the campaign window. |
+| `422` | The authorization envelope is stale, expired, or its signature is invalid. See [Merchant Authentication](/integration/authentication#error-responses). |
+| `500` | Internal error. |
+
+### Error shape
+
+Errors use the standard Blink error envelope:
+
+```json
+{
+  "error": {
+    "code": "NO_QUALIFYING_WALLET",
+    "message": "No wallet has a qualifying deposit in the campaign window."
+  }
+}
+```
