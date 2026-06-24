@@ -1,12 +1,12 @@
 ---
-title: Supported Networks and Wallets
-description: Current Blink support for connected wallets, source chains, destination chains, tokens, and deposit fee behavior.
+title: "Supported Networks and Wallets"
+description: "Current Blink support for connected wallets, source chains, destination chains, tokens, and deposit fee behavior."
 ---
 
 Use this page as the canonical destination support matrix for Blink deposits.
 
 <Info>
-Blink supports broad destination routing coverage across EVM and non-EVM chains.
+  Blink supports broad destination routing coverage across EVM and non-EVM chains.
 </Info>
 
 ## Chains, tokens, contracts
@@ -16,7 +16,7 @@ Blink supports broad destination routing coverage across EVM and non-EVM chains.
 ### Mainnets
 
 | Chain | Chain ID | Supported tokens |
-|-------|----------|------------------|
+| --- | --- | --- |
 | Abstract | `2741` | `All` |
 | Ancient8 | `888888888` | `Limited` |
 | Animechain | `69000` | `Limited` |
@@ -96,24 +96,24 @@ Blink supports broad destination routing coverage across EVM and non-EVM chains.
 ### Testnets
 
 | Chain | Chain ID | Supported tokens |
-|-------|----------|------------------|
+| --- | --- | --- |
 | Base Sepolia | `84532` | `All` |
 | Hyperliquid Testnet | `1337` | `All` |
 | Sepolia | `11155111` | `All` |
 | Tempo Testnet | `42431` | `Limited` |
 
 <Info>
-Testnet deposits run through the [testnet sandbox](/integration/testnet-sandbox), a separate environment with its own API and merchant registry. The sandbox currently supports Base Sepolia and Sepolia.
+  Testnet deposits run through the [testnet sandbox](/integration/testnet-sandbox), a separate environment with its own API and merchant registry. The sandbox currently supports Base Sepolia and Sepolia.
 </Info>
 
 ### Supported tokens and routes
 
-Relay currently supports multiple cross-chain routes across 69+ blockchain networks. This guide explains how to determine if a particular route and token pair is supported.
+Relay currently supports multiple cross-chain routes across 69\+ blockchain networks. This guide explains how to determine if a particular route and token pair is supported.
 
 ### Solver currencies and swap support
 
 | Chain name | Solver currencies (supported natively) | Swaps supported | Gas top up supported |
-|------------|-----------------------------------------|-----------------|----------------------|
+| --- | --- | --- | --- |
 | Ethereum | `ETH`, `USDC`, `USDT`, `ANIME`, `SIPHER`, `WETH`, `SYND`, `USDe`, `APE`, `PLUME`, `WBTC`, `mUSD`, `DAI`, `PYUSD` | `true` | `true` |
 | Base | `ETH`, `USDC`, `USDT`, `cbBTC`, `WETH`, `DEGEN`, `SYND`, `WBTC`, `SOL` | `true` | `true` |
 | Arbitrum | `ETH`, `USDC`, `USDT`, `WETH`, `ANIME`, `APE`, `WBTC` | `true` | `true` |
@@ -296,13 +296,14 @@ For the most up-to-date support data, always refer to the Chains API endpoint.
 
 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
   <img src="/images/blink-link-wallet-1.png" alt="Link wallet picker" style={{ width: '50%', borderRadius: '12px' }} />
+
   <img src="/images/blink-link-wallet-2.png" alt="Search across more wallets" style={{ width: '50%', borderRadius: '12px' }} />
 </div>
 
 Source-wallet connection in Blink SDK currently supports:
 
 | Wallet | Supported source chains |
-|--------|-------------------------|
+| --- | --- |
 | MetaMask | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
 | Coinbase Wallet | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
 | Trust Wallet | Ethereum Mainnet, Base, Arbitrum One, Polygon, BNB Smart Chain |
@@ -316,13 +317,14 @@ Beyond the named wallets above, WalletConnect adds support for virtually every o
 ### Source stablecoins
 
 | Source chain | Chain ID | Supported tokens |
-|--------------|----------|------------------|
+| --- | --- | --- |
 | Ethereum Mainnet | `1` | `USDC`, `USDT` |
 | Base | `8453` | `USDC`, `USDT` |
 | Arbitrum One | `42161` | `USDC`, `USDT` |
 | Polygon | `137` | `USDC.e`, `USDC`, `USDT` |
 | BNB Smart Chain | `56` | `USDC`, `USDT` |
 | Monad | `143` | `USDC` |
-| HyperCore | `999` | `USDC` |
+| HyperEVM | `999` | `USDC`, `USDH` |
+| Solana | `792703809` | `USDC`, `USDT`, `CASH` |
 
 If you need support for additional source connectivity paths, contact Blink.
