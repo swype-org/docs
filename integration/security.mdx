@@ -145,7 +145,7 @@ A silent change to the served UI would no longer match the published manifest. (
 
 ### The SDK supply chain
 
-The part of the integration that runs on your page — the `@swype-org/deposit` npm package — is pinned by your `package-lock.json` integrity hash and published with **npm provenance** (a signed attestation linking the published tarball to the exact source commit and CI build). Verify it:
+The part of the integration that runs on your page — the `@swype-org/deposit` npm package — is pinned by your `package-lock.json` integrity hash. `npm audit signatures` verifies npm's registry signature on the published tarball against that hash:
 
 ```bash
 npm audit signatures

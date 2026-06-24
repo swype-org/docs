@@ -295,7 +295,7 @@ Walk the user through [Production Checklist](https://docs.blink.cash/integration
 * Private key in a secrets manager, not a `.env` file on disk.
 * Server-side verification of transfer status — do not trust the client-side `DepositResult` for anything irreversible.
 * (Web) Lock the deposit iframe origin with a `frame-src https://pay.blink.cash` Content-Security-Policy on the app's pages. See [Security & Content Integrity](https://docs.blink.cash/integration/security).
-* Verify the SDK supply chain with `npm audit signatures` (`@swype-org/deposit` is published with npm provenance); optionally diff the live UI against `https://pay.blink.cash/manifest.json`.
+* Verify the SDK supply chain with `npm audit signatures`; optionally diff the live UI against `https://pay.blink.cash/manifest.json`.
 * Monitoring + alerting on signer errors, timeouts, and elevated failure rates.
 * `reference` and/or `metadata` populated on `requestDeposit()` calls so payments can be reconciled to internal orders.
 * If the user listed additional domains in Phase 2, whitelist each via [Whitelist Additional Domains](https://docs.blink.cash/integration/merchant-domains) once the merchant is approved (active). Build the `X-Merchant-Authorization` header by signing an auth envelope with the merchant private key — the same key as the signer.
